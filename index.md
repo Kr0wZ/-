@@ -6,6 +6,17 @@ Text can be **bold**, _italic_, or ~~strikethrough~~.
 
 [About](./about.html).
 
+### List of posts :
+
+<ul>
+  {% for post in site.posts %}
+    <li>
+      <a href="{{ post.url }}">{{ post.title }}</a>
+    </li>
+  {% endfor %}
+</ul>
+
+
 There should be whitespace between paragraphs.
 
 There should be whitespace between paragraphs. We recommend including a README, or a file with information about your project.
