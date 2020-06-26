@@ -27,7 +27,7 @@ url: "https://kr0wz.github.io/fr/" # the base hostname & protocol for your site,
 twitter_username: ZworKrowZ
 github_username:  Kr0wZ
 
-about_page: "about.html"
+about_page: "https://kr0wz.github.io/fr/about.html"
 
 # Build settings
 theme: jekyll-theme-cayman
