@@ -8,7 +8,7 @@ title: KrowZ - Tac Au T'Hack
 <ul>
   {% for post in site.posts %}
     <li>
-      <a href="/fr{{ post.url }}">{{ post.title }} - {{ post.date }}</a>
+      <a href="/fr{{ post.url }}">{{ post.title }}</a>
     </li>
   {% endfor %}
 </ul>
