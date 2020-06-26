@@ -23,7 +23,7 @@ email: zworkrowz@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   Blog informatique et infosec
 baseurl: "/fr/" # the subpath of your site, e.g. /blog
-url: "https://kr0wz.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://kr0wz.github.io/" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: ZworKrowZ
 github_username:  Kr0wZ
 
