@@ -2,11 +2,9 @@
 layout: default
 ---
 
-Text can be **bold**, _italic_, or ~~strikethrough~~.
+[Unordered List](#and-an-ordered-list)
 
-[About](./about.html).
-
-### List of posts :
+### Liste des articles sur le blog :
 
 <ul>
   {% for post in site.posts %}
@@ -62,7 +60,7 @@ end
 *   This is an unordered list following a header.
 *   This is an unordered list following a header.
 
-##### Header 5
+##### Header 5 
 
 1.  This is an ordered list following a header.
 2.  This is an ordered list following a header.
