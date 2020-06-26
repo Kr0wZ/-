@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Whoami
+permalink: /about.html
 ---
 
 Étudiant en master informatique, j'aime partager ce que j'apprends avec des personnes qui ont également envie de progresser.
