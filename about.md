@@ -1,17 +1,12 @@
 ---
 layout: default
-title: About
+title: Whoami
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+Étudiant en master informatique, j'aime partager ce que j'apprends avec des personnes qui ont également envie de progresser.
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
+Vous pouvez me retrouver sur ma chaîne Youtube sur laquelle je poste toutes sortes de vidéos en rapport avec la sécurité informatique et la programmation.                      
+Un serveur Discord est également disponible pour échanger et partager sur des sujets liés à l'informatique.
 
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
-
-
-[jekyll-organization]: https://github.com/jekyll
+[Youtube](https://www.youtube.com/channel/UCBtwyKZVYEt8-_QKgbkFTFg)                                                     
+[Discord](https://discord.gg/v6rhJay)
