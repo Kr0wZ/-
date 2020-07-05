@@ -2,7 +2,7 @@
 layout: default
 title: "And his name is John ... The Ripper"
 date:   2020-06-28 10:00:00 +0200
-published: true
+published: false
 ---
 
 ### Ce que nous allons voir dans cet article :
