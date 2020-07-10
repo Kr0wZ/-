@@ -193,7 +193,7 @@ De ce fait le loose comparison de la partie précédente que renvoyait **TRUE** 
 
 ## A vous de jouer
 
-Maintenant que vous en savez plus sur les **loose comparisons** vous voullez peut-être tenter par vous même un petit **challenge** que j'ai réalisé à ce sujet ? 
+Maintenant que vous en savez plus sur les **loose comparisons** vous voulez peut-être tenter par vous même un petit **challenge** que j'ai réalisé à ce sujet ? 
 
 Si oui alors je vous invite à vous rendre sur mon **[Github](https://github.com/Kr0wZ/php-loose-comparison)** pour y accéder et tenter de devenir le nouvel administrateur de ce site ;)
 
