@@ -72,7 +72,7 @@ Comme nous l'avons vu dans la partie précédente lorsqu'on tente de faire une q
 
 On vient de voir que PHP fait des conversions quand on compare un string avec un entier. Mais ce que je ne vous ai pas dit c'est que si dans une condition les deux chaînes de caractères **ressemblent à un nombre** alors PHP va également les convertir pour pouvoir les comparer. Ce qui va beaucoup nous servir.
 
-Par exemple si on veut comparer cette chaîne : ``"0e55555"`` avec 0 alors PHP va la transformer sa forme exponentielle représentée sous forme de chaîne en entier. Et on sait qu'un très petit nombre (proche de 0) converti en entier est égal à 0.
+Par exemple si on veut comparer cette chaîne : ``"0e55555"`` avec 0 alors PHP va transformer sa forme exponentielle sous forme de chaîne de caractère en entier. Et on sait qu'un très petit nombre (proche de 0) converti en entier est égal à 0.
 
 Donc :
 
@@ -126,7 +126,7 @@ Tiens, tiens, tiens ...
 
 On reprend la phrase écrite plus haut : ``Si dans une condition les deux chaînes de caractères ressemblent à un nombre alors PHP va également les convertir pour pouvoir les comparer.``                
 
-Cette phrase ajoutée à celle-ci devrait vous mettre la puce à l'oreille : ``Par exemple si on veut comparer cette chaîne : "0e55555" avec 0 alors PHP va la transformer sa forme exponentielle représentée sous forme de chaîne en entier. Et on sait qu'un très petit nombre (proche de 0) converti en entier est égal à 0.``.
+Cette phrase ajoutée à celle-ci devrait vous mettre la puce à l'oreille : ``Par exemple si on veut comparer cette chaîne : "0e55555" avec 0 alors PHP va transformer sa forme exponentielle sous forme de chaîne de caractère en entier. Et on sait qu'un très petit nombre (proche de 0) converti en entier est égal à 0.``.
 
 Toujours pas ? 
 
