@@ -29,6 +29,8 @@ github_username:  Kr0wZ
 
 about_page: "about.html"
 
+github_link: "https://github.com/Kr0wZ/"
+
 # Build settings
 theme: jekyll-theme-cayman
 plugins:
