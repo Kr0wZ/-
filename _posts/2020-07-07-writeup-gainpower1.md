@@ -5,7 +5,7 @@ date:   2020-07-07 10:00:00 +0200
 published: true
 ---
 
-# Information sur la box :
+# Informations sur la box :
 
 * **Difficulté** : Débutant / Intermédiaire
 * **Description** : *Warning: Be careful with "rabbit hole" !*
