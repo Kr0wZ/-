@@ -25,7 +25,7 @@ published: true
 ## Énumération
 * * *
 
-Malgré le fait qu'elle soit classée "medium" cette box peut concurrencer celle de mon [précédent writeup](https://kr0wz.github.io/fr/2020/09/06/writeup-shelldredd.html) en terme de rapiditer à la finir.
+Malgré le fait qu'elle soit classée "medium" cette box peut concurrencer celle de mon [précédent writeup](https://kr0wz.github.io/fr/2020/09/05/writeup-shelldredd.html) en terme de rapiditer à la finir.
 
 On commence à avoir l'habitude avec les étapes du début :
 
