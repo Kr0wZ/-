@@ -18,22 +18,22 @@ published: true
 
 ### Partie 1 :
 
-*	[Énumération](#énumération)
+*	  [Énumération](#énumération)
 * 	[Shell basique](#shell-basique)
-*	[Privilege escalation](#privilege-escalation)
+*	  [Privilege escalation](#privilege-escalation)
 
 ### Partie 2 :
 
-*	[Énumération](#deuxième-énumération)
+*	  [Énumération](#deuxième-énumération)
 * 	[Pivoter](#pivoter)
 * 	[Shell basique](#shell-deuxième-machine)
-*	[Privilege escalation](#privilege-escalation-deuxième-machine)
+*	  [Privilege escalation](#privilege-escalation-deuxième-machine)
 
 ### Partie 3 :
 
 * 	[Énumération](énumération-finale)
 * 	[Shell basique](#shell-basique-final)
-*	[Privilege escalation](#privilege-escalation-final)
+*	  [Privilege escalation](#privilege-escalation-final)
 
 
 * * *
@@ -333,7 +333,7 @@ Le réseau sur lequel nous sommes n'a plus du tout le même adressage que celui 
 
 Un ~~très beau~~ Paint vous expliquera mieux que moi.
 
-**METTRE LE PAINT ICI**
+![](../../../pictures/writeups/nully-cybersecurity/paint_network.png)
 
 Docker permet de virtualiser différents environnements. Grâce à ça on peut faire tourner plusieurs dockers sur une machine hôte. Dans notre cas c'est ce qu'il se passe. Chaque docker se situe dans un même sous réseau sur la machine hôte qui elle est sur le réseau 192.168.1.0/24.
 
