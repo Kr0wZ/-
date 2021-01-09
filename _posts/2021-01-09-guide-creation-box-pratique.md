@@ -1,36 +1,27 @@
 ---
 layout: default
-title: "Création de box - Guide du débutant"
-date:   2021-01-05 03:00:00 +0200
-published: true
+title: "Création de box - Guide du débutant - Pratique"
+date:   2021-01-09 03:00:00 +0200
+published: false
 ---
 
-*Cet article est la partie théorique pour la création d'une box boot2root. La suite de cet article qui concerne la partie pratique peut être trouvée [**ici**](https://kr0wz.github.io/fr/2021/01/09/guide-creation-box.html)*
+*Cet article est la partie pratique pour la création d'une box boot2root. Vous pouvez retrouver la première partie théorique [**ici**](https://kr0wz.github.io/fr/2021/01/05/guide-creation-box.html)*
 
 # Introduction :
 
-Avant de continuer la lecture et potentiellement vous faire perdre votre temps, on va définir ce qu'est une **box** (*si jamais vous cherchiez autre chose genre une **WonderBox** lol*).
-Dans le jargon de la sécurité informatique quand on parle de **box** on parle en fait d'une **machine vulnérable** conçue d'une manière à laisser la possibilité à des hackers d'en prendre le contrôle. 
+Dans cet article qui suit la logique du premier on va **mettre en pratique** ce qui a été vu précédemment. Cela va se faire grâce à la création d'une box plutôt simple orientée pour les débutants.
 
-Rassurez-vous, ces machines sont faîtes pour apprendre et donc ça reste dans un **cadre légal**.
+Tout ce que je vais indiquer ici seront des exemples choisis parce qu'ils sont rapide à mettre en place et facile à expliquer. Cependant rien ne vous empêche de votre côté de reprendre ce qu'on va faire ici et de modifier à votre sauce.
 
-J'en profite également pour vous (re)dire qu'il est interdit d'attaquer ou de tenter d'attaquer un système d'information qui ne vous appartient pas ou dont vous n'avez pas l'autorisation explicite et écrite de la personne qui possède ce système.
-
-Pour en revenir à ces fameuses box aussi appelées **boot2root** ou bien **ctf** (*même si ce dernier terme n'est pas vraiment adapté*), il en existe en tout genre, de toutes difficultés, plus ou moins réalistes, de différentes distributions / OS, etc ...
-
-Dernière chose avant d'attaquer le sujet, je tiens à préciser que cet article concerne **UNIQUEMENT** mon **expérience personnelle** ainsi que mes habitudes. Même si je pense que pas mal de personnes fonctionnent à peu près de la même manière. Je vais donc tenter de vous donner des **conseils** et **guidelines** à suivre si vous débutez dans la création de box.
-
-En espérant qu'à la fin de cette article vous aurez les bases pour vous lancer et nous proposer de la nouveauté !
-
-**Bonne lecture !**
+On va garder la **même structure** que pour le premier article. Cependant il se peut que **l'ordre des étapes** ne soit pas identique. Pourquoi ? Parce que comme précisé précédemment, tout n'est pas fixé à l'avance. C'est une sorte de marche à suivre pour avoir une **vision globale** du projet. C'est aussi en fonction des préférences de chacun.
 
 * * *
 
-## Ce que nous allons aborder dans cet article :
+## Ce que nous allons aborder :
 
 - [Préparation et réflexion à la création de la box](#préparation-et-réflexion-à-la-création-de-la-box) :
-    - [Prise de notes](#prise-de-notes)
     - [Public visé](#public-visé)
+    - [Prise de notes](#prise-de-notes)
     - [Scénario](#scénario)
     - [Flags](#flags)
 
@@ -52,55 +43,46 @@ En espérant qu'à la fin de cette article vous aurez les bases pour vous lancer
 
 ## Préparation et réflexion à la création de la box
 
-Vous vous en doutez, avant de commencer à vouloir configurer votre box il faut déjà **réfléchir** à plusieurs choses essentielles. 
-Pour une box orientée débutants il se peut qu'y aller directement sans trop réfléchir puisse fonctionner si vraiment vous savez déjà **précisément** ce que vous voulez mettre en place et que ce n'est pas très complexe. <br>
+Pour prendre exemple sur l'article concernant la théorie, c'est ici qu'on va **réfléchir** à toutes les idées histoire d'avoir en tête un schéma à suivre pour ensuite **gagner du temps** lors de la mise en place technique.
 
-Mais croyez moi, quand il commence à y avoir plusieurs services qui tournent derrière avec des droits spécifiques pour plusieurs utilisateurs et des interactions dans tous les sens il est **important de poser à l'écrit** et de bien tout préparer. Si ça aussi vous servir pour plus tard pour **revenir en arrière** si jamais quelque chose n'est pas cohérent par exemple.
-
-* * *
-
-### Prise de notes 
-
-On peut dire que c'est une **première esquisse** de ce qui va se rapprocher de votre box finale.
-Ici l'idée n'est pas forcément de tout savoir ce qu'on va mettre en place mais plutôt de **noter un peu toutes sortes d'idées** qui nous viennent en tête. 
-Ça peut être des vecteurs d'attaque, des escalations de privilèges, une idée d'un thème ou d'une histoire à développer et à intégrer dans la box, un scénario, etc ...
-
-Vraiment noter le **plus de choses possibles** même les plus futiles. Cette étape est importante pour avoir le plus de matière possible pour ensuite manipuler et faire le tri sur ce qu'on veut garder ou pas lors de la suite pour la configuration de la box.
-
-Imaginons que vous ayez plusieurs escalations de privilèges. Dans ce cas, le fait de les avoir noté va vous permettre de choisir celle qui **correspond le mieux** en fonction des autres choix.
-
-
-Le fait de choisir quelque chose à mettre en place mais de ne pas savoir comment est également un **très bon exercice** pour apprendre de nouvelles techniques, technologies. Mettre les mains dans le cambouis a toujours été très formateur surtout en sécurité informatique.<br>
-
-Alors si par exemple vous voulez mettre en place un **buffer overflow** mais que vous ne savez pas comment faire, allez vous renseigner sur comment on **exploit ces vulnérabilités**, comment elles fonctionnent.
-
-Une fois que vous avez réuni suffisament d'idées vous pouvez passer à l'étape suivante qui consiste à **choisir le public** visé pour votre box.
-
-Bien évidemment il est possible de revenir à cette étape si jamais on s'apperçoit que quelque chose n'est aps cohérente oub ein si d'autres idées nous parviennent.
-
-**Très important** également : prenez des notes même pendant la phase de configuration et d'installation des services sur la machine. Cela va vous permettre de garder une trace de ce que vous avez fait si jamais un problème suirvient ou si plus tard vous êtes ammenés à reproduire quelque chose d'équivalent.
 
 * * *
 
 ### Public visé
 
-Cette étape va nous servir à définir le public qui va hacker la box. 
-Il en va de soit qu'on ne va pas mettre des techniques de hacking ultra poussées si la box est destinée à des débutants et inversement.
+Cette fois-ci on ne va pas commencer par la prise de notes mais bien par le public visé. Déjà pour vous montrer qu'on peut très bien faire dans un ordre différent selon les besoins, mais aussi parce qu'ici ça nous arrange de d'abord commencer par cette étape.
 
-On ne peut pas vraiment définir un tableau avec la difficulté en fonction des vulnérabilités mais on peut déjà définir un peu le type d'exploitations que l'on trouve en fonction de la difficulté.
-Evidemment la difficulté est propre est chacun en fonction de son niveau et de son expérience dans le domaine. Donc là je vais parler en fonction de moi en sachant que j'ai pas un très bon niveau.
+En effet, l'article a pour but d'être une aide pour les **débutants**. On a donc déjà notre public visé.
 
-On pourrait donc donner un ordre d'idée qui correspondrait à ça :
 
-- **Débutant** : web, code source, fuzzing, brute force, GTFOBins, très CTF like
-- **Intermédiaire** : réflexion plus poussée pour faire les liens entre chaque étape, services plus "exotiques", custom scripts
-- **Difficile** : souvent réaliste, custom exploits, souvent bas niveau / reverse / pwn (bref complexe), services créés sur mesure
 
-Encore une fois c'est très grossier comme classement et évidemment qu'il peut y avoir n'importe quelle technique dans n'importe quelle difficulté mais c'est un peu pour donner une **base commune** et avoir une idée du type de vecteurs d'attaques de chaque catégorie.
+* * *
 
-La difficulté va également influer le temps de résolution de la box. Une box facile sera forcément **plus rapide** à résoudre qu'une box qui demande d'écrire un exploit à la main pour exploiter une vulnérabilité plutôt complexe.
+### Prise de notes 
 
-On peut aller piocher et commencer à **faire le tri** au niveau des idées que nous avons eu au début pour qu'elles correspondent à la difficulté.
+En connaissant à l'avance le public visé, j'ai défini une liste de plusieurs idées qui me sont passées par la tête et qui peuvent être orientées vers les débutants *(encore une fois rien n'est fixé)*.
+
+On va directement rentrer dans le concret en vous montrant le texte brut que j'ai écrit pour cet article concernant les idées pour la box qu'on va créer ici :
+
+```
+- Idées de scénarios / vecteurs d'attaque pour la box :
+  - Site Wordpress avec vulnérabilité
+  - Privesc avec commande "man"
+  - Obtenir premier shell avec smb -> écriture disponible donc upload shell et navigation dans le répertoire web correspondant pour l'exécuter
+  - Fuzzing web pour obtenir le répertoire smb
+  - Brute force passphrase clé SSH
+  - Mot de passe dans le code source encodé dans une base (base64, base32 ...)
+  - Etude d'une capture wireshark avec les identifiants à l'intérieur
+  - Privesc avec commande vim via sudo
+  - Privesc avec SUID
+  - Découverte d'un mot de passe avec de l'OSINT (compte Twitter par exemple)
+  - LFI sur le site web
+  - Serveur FTP
+```
+
+
+
+
 
 * * *
 
