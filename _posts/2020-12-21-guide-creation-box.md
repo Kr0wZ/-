@@ -31,9 +31,9 @@ En espérant qu'à la fin de cette article vous aurez les bases pour vous lancer
 - [Préparation et réflexion à la création de la box](#préparation-et-réflexion-à-la-création-de-la-box) :
     - [Prise de notes](#prise-de-notes)
     - [Public visé](#public-visé)
-    - [Scénario](#scénario)
     - [Flags](#flags)
-
+    - [Scénario](#scénario)
+    
 - [Mise en place et configuration technique](#mise-en-place-et-configuration-technique) :
     - [Choisir son OS](#choisir-son-os)
     - [Choix du système de virtualisation](#choix-du-système-de-virtualisation)
