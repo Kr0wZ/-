@@ -32,6 +32,7 @@ En espérant qu'à la fin de cette article vous aurez les bases pour vous lancer
     - [Prise de notes](#prise-de-notes)
     - [Public visé](#public-visé)
     - [Scénario](#scénario)
+    - [Flags](#flags)
 
 - [Mise en place et configuration technique](#mise-en-place-et-configuration-technique) :
     - [Choisir son OS](#choisir-son-os)
@@ -103,6 +104,21 @@ On peut aller piocher et commencer à **faire le tri** au niveau des idées que 
 
 * * *
 
+### Flags
+
+Ce qu'on appelle **flag** ici correspond à une **chaîne de caractères** présente sur la machine qui permet de **prouver** qu'on a bien réussi un certain nombre d'étapes.<br>
+
+Un flag peut être un **hash** aléatoire ou bien sous une forme spécifique comme : *my_flag{This_is_a_flag}*.
+
+Il n'y a pas vraiment de règle concernant le format de ceux-ci. On doit seulement pouvoir les reconnaitre. S'ils ont un format spécial on pourra le préciser au départ par exemple.
+
+La plupart du temps il n'y a que **2 flags** sur la machine. Un pour l'utilisateur et un pour le root.
+
+Cependant, si vous voulez que l'utilisateur **cherche en profondeur** dans la box, vous pouvez toujours insérer des flags à des endroits spécifiques. Ça peut être des fichiers de configurations importants, le code source d'une page, etc ...
+
+
+* * *
+
 ### Scénario
 
 Quand je parle de scénario je parle du **chemin à suivre** pour "résoudre" la machine et la compromettre.
@@ -125,6 +141,7 @@ Le plus important reste d'avoir une **suite logique des étapes**. Encore une fo
 
 
 Une fois que vous avez en tête une idée précise du chemin à emprunter, les vulnérabilités à mettre en place et le public visé vous pouvez commencer à vous diriger vers la **partie pratique** et **configuration** de la machine vulnérable.
+
 
 * * *
 
