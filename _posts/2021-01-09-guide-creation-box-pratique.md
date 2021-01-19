@@ -1,8 +1,8 @@
 ---
 layout: default
 title: "Création de box - Guide du débutant - Pratique"
-date:   2021-01-09 03:00:00 +0200
-published: false
+date:   2021-01-19 03:00:00 +0200
+published: true
 ---
 
 *Cet article est la partie pratique pour la création d'une box boot2root. Vous pouvez retrouver la première partie théorique [**ici**](https://kr0wz.github.io/fr/2021/01/05/guide-creation-box.html)*
@@ -22,20 +22,23 @@ On va garder la **même structure** que pour le premier article. Cependant il se
 - [Préparation et réflexion à la création de la box](#préparation-et-réflexion-à-la-création-de-la-box) :
     - [Public visé](#public-visé)
     - [Prise de notes](#prise-de-notes)
-    - [Scénario](#scénario)
     - [Flags](#flags)
+    - [Scénario](#scénario)
 
 - [Mise en place et configuration technique](#mise-en-place-et-configuration-technique) :
     - [Choisir son OS](#choisir-son-os)
     - [Choix du système de virtualisation](#choix-du-système-de-virtualisation)
+    - [Installation Debian](#installation-debian)
     - [Sauvegardes](#sauvegardes)
-    - [Configuration de base](#configuration-de-base)
-    - [Diviser pour mieux régner](#diviser-pour-mieux-régner)
-    - [Configuration globale](#configuration-globale)
-    - [Essais globaux](#essais-globaux)
+    - [Accès à la machine](#accès-à-la-machine)
+    - [FTP](#ftp)
+    - [SMB](#smb)
+    - [Web](#web)
+    - [Privesc utilisateur](#privesc-utilisateur)
+    - [Privesc root](#privesc-root)
+    - [Dernières modifications](#dernières-modifications)
+    - [Essais globaux](#essais-globaux) 
     - [Mise en ligne et diffusion](#mise-en-ligne-et-diffusion)
-
-- [Erreurs à ne pas faire](#erreurs-à-ne-pas-faire)
 
 - [Conclusion](#conclusion)
 
@@ -55,7 +58,6 @@ Cette fois-ci on ne va pas commencer par la prise de notes mais bien par le publ
 En effet, l'article a pour but d'être une aide pour les **débutants**. On a donc déjà notre public visé.
 
 
-
 * * *
 
 ### Prise de notes 
@@ -64,176 +66,855 @@ En connaissant à l'avance le public visé, j'ai défini une liste de plusieurs 
 
 On va directement rentrer dans le concret en vous montrant le texte brut que j'ai écrit pour cet article concernant les idées pour la box qu'on va créer ici :
 
-```
-- Idées de scénarios / vecteurs d'attaque pour la box :
-  - Site Wordpress avec vulnérabilité
-  - Privesc avec commande "man"
-  - Obtenir premier shell avec smb -> écriture disponible donc upload shell et navigation dans le répertoire web correspondant pour l'exécuter
-  - Fuzzing web pour obtenir le répertoire smb
-  - Brute force passphrase clé SSH
-  - Mot de passe dans le code source encodé dans une base (base64, base32 ...)
-  - Etude d'une capture wireshark avec les identifiants à l'intérieur
-  - Privesc avec commande vim via sudo
-  - Privesc avec SUID
-  - Découverte d'un mot de passe avec de l'OSINT (compte Twitter par exemple)
-  - LFI sur le site web
-  - Serveur FTP
-```
+
+- Site Wordpress avec vulnérabilité
+- Privesc avec commande ``man``
+- Obtenir premier shell avec smb -> écriture disponible donc upload shell et navigation dans le répertoire web correspondant pour l'exécuter
+- Fuzzing web pour obtenir le répertoire smb
+- Brute force passphrase clé SSH
+- Mot de passe dans le code source encodé dans une base (base64, base32 ...)
+- Etude d'une capture wireshark avec les identifiants à l'intérieur
+- Privesc avec commande ``vim`` via sudo
+- Privesc avec SUID
+- Découverte d'un mot de passe avec de l'OSINT (compte Twitter par exemple)
+- LFI sur le site web
+- Serveur FTP
 
 
+On voit déjà que toutes les idées ne seront pas utilisées parce que certaines rentrent en contradiction avec d'autres. Mais ce n'est pas grave puisqu'on pourra les garder de côté pour une potentielle future box.
 
+Cette liste regroupe non seulement des vecteurs d'attaque comme les escalations de privilèges, le brute force, LFI, etc ... Mais aussi des idées de scénario. 
 
+Si dans la suite des étapes on se rend compte qu'une idée ne fonctionne pas ou bien qu'on en a une nouvelle en tête, on va pouvoir modifier cette liste à notre guise.
+
+On fera le **tri** par la suite lorsqu'on parlera du scénario.
 
 * * *
 
 ### Flags
 
-Ce qu'on appelle **flag** ici correspond à une **chaîne de caractères** présente sur la machine qui permet de **prouver** qu'on a bien réussi un certain nombre d'étapes.<br>
+On reste sur du basique avec seulement 2 flags. Le user et le root.
 
-Un flag peut être un **hash** aléatoire ou bien sous une forme spécifique comme : *my_flag{This_is_a_flag}*.
+On va donc générer deux hash aléatoires. On va pouvoir faire ça directement sur Linux (ou bien sur les sites de hash) :
 
-Il n'y a pas vraiment de règle concernant le format de ceux-ci. On doit seulement pouvoir les reconnaitre. S'ils ont un format spécial on pourra le préciser au départ par exemple.
+```bash
+echo -n "this is my user flag" | md5sum  #User flag
+echo -n "this is another root flag" | md5sum  #Root flag
+```
 
-La plupart du temps il n'y a que **2 flags** sur la machine. Un pour l'utilisateur et un pour le root.
+On va donc obtenir :
 
-Cependant, si vous voulez que l'utilisateur **cherche en profondeur** dans la box, vous pouvez toujours insérer des flags à des endroits spécifiques. Ça peut être des fichiers de configurations importants, le code source d'une page, etc ...
+```
+User flag -> 01846f86f9285ca468eb3618db462ab1
+Root flag -> b1970313271d6e36bb343cd8e671b087
+```
 
+On les garde de côté pour ensuite les ajouter aux fichiers qu'on nommera par exemple ``user.txt`` et ``root.txt``.
 
 * * *
 
 ### Scénario
 
-Quand je parle de scénario je parle du **chemin à suivre** pour "résoudre" la machine et la compromettre.
+A partir de cette étape on va pouvoir construire concrètement le chemin à suivre pour que l'utilisateur puisse attaquer notre machine vulnérable.
 
-Plus précisément les **étapes nécessaires** à l'avancement du hacker dans la machine pour arriver à sa compromission totale. 
-Ces étapes vont de l'énumération de base de la machine, en passant par l'exploitation pour avoir un premier shell, l'escalation de privilèges pour obtenir le root ou bien rajouter une étape intermédiaire pour passer sur un autre utilisateur qui lui aura peut-être les droits nécessaires, etc ...
+On va donc se baser sur la liste qu'on avant plus haut et pour chaque idée on va voir ce qu'on peut en faire :
 
-On peut donner **quelques exemples** concernant ce qu'on veut que le hacker fasse et/ou ne fasse pas durant le hacking de notre box.
-Si c'est une machine pour débutants, qu'on veut qu'il brute force quelque chose et qu'on veut laisser un indice alors il peut être judicieux de créer un répertoire caché à la racine du site (ou bien dans le code source de l'index par exemple) qui lui donnerait le nom d'une liste de mots de passe à utiliser ou bien carrément le fichier adéquat. Evidemment ce n'est qu'un exemple mais il est important de bien **définir au préalable où on veut diriger le hacker**. Ça peut aussi être un choix de ne rien donner à l'utilisateur et c'est à lui d'énumérer absolument tout se qui se situe devant lui pour trouver l'entrée ou des choses intéressantes.
+- Site Wordpress **pas assez adapaté** pour le personnaliser et ajouter des vulnérabilités manuelles. Donc choix d'un set up de site manuellement.
+- Pour bien aller avec ce site -> serveur SMB mal configuré ce qui va nous permettre d'**upload** un reverse shell dedans et de le déclancher via le site web.
+- **Fuzzing** sur le site web pour trouver le répertoire caché qui est lié à smb pour l'exécution.
+- Serveur FTP est en trop mais on peut quand même le rendre accessible en *anonymous* avec rien d'important à l'intérieur pour **brouiller les pistes** / rabbit hole.
+- Le brute force de la clé SSH sera compliqué à mettre en place dans note cas donc je *laisse de côté* pour une autre fois.
+- Le mot de passe dans le code source n'est pas non plus adapté car **pas besoin de mot de passe** dans notre cas. On aurait pu utiliser ce mot de passe pour donner accès au ftp par exemple.
+- Plusieurs possibilités de privesc. Ici on considère que l'utilisateur aura un shell via un reverse shell donc il arrivera sur la machine en tant que ``www-data``. Donc il faut penser à passer en tant qu'utilisateur puis en tant que root. Donc au moins 2 privesc. On peut choisir celle avec un **binaire en SUID**. On va devenir root grâce à la commande **"man"**. Le sudo avec Vim aurait aussi pu être intégré mais il est vraiment plus courant. On aurait pu également laisser trainer une *capture wireshark* dans la machine mais on a déjà ce qu'il nous faut.
+- La découverte d'un mot de passe avec de l'**OSINT** aurait été une très bonne idée pour une box orientée *réaliste* par exemple. Cependant dans notre box on a déjà notre première phase d'approche donc encore une fois on laisse de côté.
+- Pareil pour la **LFI**, pas besoin puisqu'on a déjà notre façon de rentrer sur la machine.
 
-Si on veut à l'inverse éviter que l'utilisateur brute force par exemple le ssh alors on va pouvoir mettre en place un **système pour éviter ça** (fail2ban pour ne citer que lui).
+Maintenant qu'on a fait le tri dans toutes les idées voici un petit récapitulatif de ce qu'on va mettre en place :
 
-Il est également possible de faire une **box à thème**. Si par exemple vous êtes fan de la franchise Fallout alors vous pouvez mettre des clins d'oeil tout au long de la progression dans la machine. Ça peut aller au site web qui reprend un thème spécifique avec les couleurs, le texte, jusqu'aux utilisateurs dans la machine qui portent des noms particuliers. La seule limite est votre **imagination**.
-
-Pour vous donner un exemple de machine à thème vous pouvez aller voir la machine [**Biohazard**](https://tryhackme.com/room/biohazard) sur TryHackMe. Il s'agit d'une box sur le thème de la franchise **Resident Evil**. La plupart de l'histoire se déroule via le web avec de petites énigmes qui vont nous permettre d'avancer et au fur et à mesure pour arriver à obtenir un shell.
-
-On peut orienter le hacker vers de **fausses pistes** appelées (rabbit holes), ce qui va le pousser à revenir en arrière et continuer l'énumération pour rechercher une autre vulnérabilit potentielle. On pourrait imaginer plusieurs façons pour l'utilisateur d'arriver à un même point. Par exemple en intégrant plusieurs vulnérabilités dans la machine qui permettraient un choix au niveau de l'escalation de privilèges.
-
-Le plus important reste d'avoir une **suite logique des étapes**. Encore une fois ce que je dis et très générique et bien sûr qu'il peut y avoir des exceptions partout. Vous pouvez très bien faire en sorte qu'une fois que l'utilisateur obtient un shell sur la machine ça déclenche une action qui va ouvrir un nouveau port sur la machine et donc le hacker va de nouveau devoir repartir à la phase énumération pour tenter de poursuivre son ascension.
-
-
-Une fois que vous avez en tête une idée précise du chemin à emprunter, les vulnérabilités à mettre en place et le public visé vous pouvez commencer à vous diriger vers la **partie pratique** et **configuration** de la machine vulnérable.
-
+- Serveur FTP pour brouiller les pistes.
+- Serveur SMB pour y upload un reverse shell.
+- Serveur Web pour exéucter le reverse shell qu'on aura upload via SMB et obtenir un shell sur la machine.
+- Privesc de www-data au premier user grâce à un binaire SUID
+- Privesc du user au root avec la commande "man"
 
 * * *
 
 ## Mise en place et configuration technique
 
-Dans cette partie on va voir de manière assez brève les **bonnes pratiques** pour mener à bien la **création de la box**.
-Vous allez voir que la première chose ici correspond au choix du système d'exploitation ainsi que de la distribution que vous allez utiliser.
-
-Encore une fois, il n'est **pas nécessaire de suivre l'ordre** dans lequel j'ai indiqué les étapes. Vous pouvez tout à fait choisir le système d'exploitation et ensuite réfléchir aux vulnérabilités associées à celui-ci. 
+On sait ce qu'on veut mettre en place, il ne nous reste plus qu'à se concentrer sur la partie technique pour implémenter toutes nos idées.
 
 * * *
 
 ### Choisir son OS
 
-Dans cette sous-partie pas grand chose à dire, si ce n'est que vous pouvez choisir votre système d'exploitation en fonction des vulnérabilités trouvées dans la partie "prise de notes" ou bien inversement et partir de l'OS pour rechercher les vulnérabilités liées.
+En fonction des vulnérabilités trouvées dans la partie "prise de notes" on sait déjà qu'on va utiliser du Linux.
 
-A savoir aussi que le **choix de l'OS n'a pas vraiment d'impact pour certains services**. Par exemple avec le web, dans tous les cas vous pourrez mettre en place un site avec PHP, javascript ou même du Wordpress.
-
-Le choix va surtout être déterminant pour **l'escalation de privilèges** ou bien si vous voulez mettre certains services qui ne sont disponibles que sur une plateforme en particulier.
-Un buffer overflow ne va pas fonctionner de la même façon sur un Windows ou un Linux par exemple.
+Pour la distribution Ubuntu ou Debian ferait très bien l'affaire. Je pars donc sur une Debian *(encore une question de préférence)*.
 
 * * *
 
 ### Choix du système de virtualisation
 
-Encore une fois ici c'est vraiment en fonction des **préférences** de chacun.
+Cette partie est également très rapide. J'ai l'habitude d'utiliser **VirtualBox**, il permet de faire des sauvegardes plutôt facilement.
 
-Il est vivement conseillé d'utiliser un **système de virtualisation** pour créer une machine vulnérable. **Pourquoi** ? Comme on le verra dans la partie suivante, les sauvegardes se font très facilement et rapidement, à la fin vous pourrez également exporter votre machine dans un format qui permettra de le partager de manière très aisée sur Internet.
+Vous pourrez le télécharger directement sur le [**site officiel**](https://www.virtualbox.org/).
 
-Vous pouvez utiliser **VMWare** ou bien **VirtualBox** qui sont les plus répandus. Je vous conseillerais cependant de partir plutôt sur du **VirtualBox** qui est selon moi beaucoup plus facile de configuration pour débuter *(surtout si vous ne disposez pas de la version payante de VMWare)*. Je n'ai jamais eu de problèmes de réseau sur VirtualBox comparé à VMWare sur lequel j'ai jamais réussi à faire tourner une box provenant de VMWare suite à des problèmes de réseau qui faisaient qu'aucune adresse IP n'était attribuée à la machine.
+* * *
 
-Tout ça pour dire que le type de software utilisé pour la virtualisation de votre box n'est pas vraiment important, choisissez en fonction de vos habitudes (et de celui qui fonctionne le mieux pour vous).
 
+### Installation Debian
+
+La première chose à faire est de télécharger une image **ISO** de Debian directement sur le [**site officiel**](https://www.debian.org/CD/http-ftp/#stable).
+
+Il faut choisir en fonction de votre architecture processeur mais le plus souvent ce sera **amd64** pour du 64 bits ou **i386** pour du 32 bits.
+
+![](../../../pictures/creation-box/debian_download.PNG)
+
+Une fois en possession de cette image on va donc créer une **nouvelle machine** vierge sur VirtualBox.
+
+![](../../../pictures/creation-box/vbox_new.PNG)
+
+Comme nous allons installer une machine Debian il faut choisir les bonnes options. Vous pouvez appeler votre box comme bon vous semble ça n'aura pas d'incidents par la suite. Le nom sera affiché dans la liste des machines à gauche une fois créée.
+
+![](../../../pictures/creation-box/vbox_config.PNG)
+
+**Attention** lorsqu'on vous demande de choisir la taille du disque à sélectionner une **taille suffisante** pour ce dont vous avez à faire. En général 3-4 GB suffisent (très) largement.
+
+Il faut aussi spécifier avec quelle image la machine virtuelle doit démarrer. On a télécharger notre image Debian et donc il faut la spécifier.<br>
+On se rend dans le menu **"Stockage"**, on sélectionne le disque vide de la partie **Contrôleur : IDE** et à droite on va venir cliquer sur le petit CD et aller chercher notre **image disque** qu'on vient de télécharger (si vous ne l'avez pas déplacé alors il se situe dans le dossier de téléchargement). 
+
+![](../../../pictures/creation-box/vbox_iso_before.PNG)
+
+Suite à la sélection de l'image on doit obtenir quelque chose de semblable à ceci :
+
+![](../../../pictures/creation-box/vbox_iso_after.PNG)
+
+Par défaut la carte réseau est en **NAT**. On va la modifier pour la mettre en **mode pont**. De ce fait notre machine virtuelle aura une adresse IP assignée par notre DHCP comme si c'était une "vraie" machine physique du réseau.
+
+![](../../../pictures/creation-box/vbox_network.PNG)
+
+On est prêt à lancer la machine virtuelle en la sélectionnant dans la liste de gauche et en cliquant sur la flèche verte **"Démarrer"**.
+
+On se retrouve désormais à devoir installer Debian. Je vais montrer ici que les étapes qui ne sont pas forcéments intuitives. Pour le reste ça ne devrait pas trop poser de problèmes. La plupart du temps il suffit de faire suivant sans changer les paramètres de base.
+
+Pour ceux qui ne sont pas habitués avec la **ligne de commande** ça va être compliqué puisqu'on va faire presque que ça pour configurer les différents services de notre box. Cependant, si vous voulez profiter de votre dernier instant avec une souris vous pouvez faire une **installation graphique** ;)
+
+![](../../../pictures/creation-box/graphical_install.PNG)
+
+On va donc vous demander plein d'informations différentes comme par exemple votre pays, la configuration de votre clavier, etc ... Je considère que vous êtes assez grands pour faire ce genre de choses.
+
+Pour ce qui est de la partie choix du nom d'hôte, de l'utilisateur, du root et de leur mot de passe vous pouvez mettre ce que vous voulez puisque vous pourrez modifier par la suite.<br>
+Je vous conseille quand même de mettre des mots de passe faciles à mémoriser lors de la configuration des différents services, ça vous fera gagner du temps. Le nom d'hôte sera affiché dans votre shell derrière le nom de l'utilisateur courant. Vous pourrez aussi le modifier par la suite.
+
+N'oubliez pas de noter tous vos mots de passe pour vous en souvenir plus tard !
+
+La partie la plus "compliquée" est le partitionnage. Heureusement dans notre cas on va faire quelque chose de basique puisqu'on va utiliser tout le disque pour y installer Debian.
+
+Encore une fois ici on fait quelque chose de facile et simple volontairement mais évidemment, si vous savez que votre machine finale sera très lourde alors vous pouvez optimiser l'espace alloué en partitionnant manuellement le disque.
+
+Dans notre cas on va supprimer tout le disque pour y installer Debian.
+
+![](../../../pictures/creation-box/install_guided_partitionning.PNG)
+
+![](../../../pictures/creation-box/install_guided_partitionning2.PNG)
+
+![](../../../pictures/creation-box/install_guided_partitionning3.PNG)
+
+L'installation va ensuite prendre de longues minutes.
+
+On vous demandera par la suite si vous voulez scanner un autre disque, dans ce cas répondez **"Non"**.
+
+Lorsqu'on vous demandera un **proxy** laissez le **champ vide**.
+
+Encore une fois il faut attendre que l'installation se fasse.
+
+On arrive à la partie où on va installer les services de base pour notre Debian.
+
+![](../../../pictures/creation-box/install_services.PNG)
+
+On ne va **pas cocher** la case pour avoir un Desktop Environment. Parce que déjà ça va **alourdir** la machine pour rien et ensuite parce qu'il faut vous forcer à vous **habituer** à la ligne de commande (si ce n'est pas déjà le cas). Vous verrez c'est sympa. Promis.
+
+Le reste dépend un peu du scénario de votre machine. S'il contient un site web alors cochez la case **"web server"**.
+
+Je vous conseille quand même d'installer un **server SSH**. Ce sera beaucoup plus simple par la suite pour configurer la box. Vous pourrez toujours désinstaller SSH à la fin.
+
+On garde également les **"standard system utilities"**.
+
+
+On va ensuite installer **grub** pour que notre machine puisse boot.
+
+![](../../../pictures/creation-box/install_grub.PNG)
+
+![](../../../pictures/creation-box/install_grub2.PNG)
+
+On l'installe au même emplacement que notre disque principal (de toute façon on n'a pas trop le choix).
+
+On arrive à la fin de l'installation !
+
+Normalement le système devrait redémarrer et si tout s'est bien passé alors au redémarrage on doit tomber sur le **menu grub**
+
+![](../../../pictures/creation-box/boot_grub.PNG)
+
+On atterit alors sur la page de **login** de la machine.
+
+![](../../../pictures/creation-box/login_page_after_install.PNG)
+
+Si vous êtes arrivés jusqu'ici alors bravo à vous. Maintenant dépèchez vous de faire une **sauvegarde** de votre VM pour éviter de recommencer toutes ces étapes !
 
 * * *
 
 
 ### Sauvegardes
 
-C'est l'une des **étapes les plus importantes** et vous me remercierez plus tard lorsque vous aurez fait une **backup** avant de casser votre VM.
+Les sauvegardes sont font de manière très simple via **VirtualBox**. 
 
-Avant chaque grosse modification sur votre VM je vous conseille de faire une sauvegarde de votre machine en lui donnant un nom spécifique pour vous retrouver. En effet, si vous venez à devoir repartir d'une base fonctionnelle lors d'une erreur de configuration par exemple il est important de s'y **retrouver rapidement**.
+Il faut tout d'abord **éteindre** la machine que l'on veut sauvegarder.
 
-Pensez donc à faire **régulièrement** des backups :)
+Il suffit de sélectionner dans la liste de gauche la machine qui vous voulez sauvegarder, de faire un clic droit dessus et de sélectionner **"Cloner"**. On va alors vous demander de faire un choix entre deux types de clonages différents. Sélectionnez **"clone intégral"** et donnez lui un nom explicite. Par exemple "Ma_box_Debian_base" ou quelque chose qui vous indique que c'est votre machine Debian de base après avoir fait l'installation de base.
 
+Vous devriez vous retrouver désormais avec 2 machines dans votre liste de gauche. La nouvelle créée et l'ancienne. Vous pouvez reprendre l'ancienne pour continuer vos configurations dessus.
 
-* * *
+Si jamais vous avez un problème et que vous devez reprendre celle de base alors vous pourrez supprimer l'ancienne et reprendre depuis celle qui est toute fraîche.
 
+Ici aussi faîtes attention à bien **refaire une sauvegarde** de cette machine pour ne pas avoir à tout recommencer en cas d'erreur. Puisque cette machine sera modifiée.
 
-### Configuration de base
+Voici un petit exemple de la liste des machines qu'on aura à la fin de notre configuration :
 
-Ce que j'appelle configuration de base c'est l'installation du **système d'exploitation** et des **services essentiels** au bon fonctionnement de votre machine (comme par exemple SSH).
-Il s'agit donc de faire une **installation propre basique** (par exemple en prennant Debian), configurer l'utilisateur principal ainsi que le root. Au début vous pouvez donner des mots de passe simples pour vos utilisateurs, ce sera **plus facile** lors des configurations pour passer d'un utilisateur de la machine à un autre sans devoir vous taper des mots de passe illisibles toutes les 10 minutes. Attention cependant à la fin de votre configuration de **tout modifier** pour éviter de potentiels brute force *(sauf si encore une fois ça fait partie de votre scénario d'attaque)*.
+![](../../../pictures/creation-box/vbox_saves_all.PNG)
 
-Je vous recommande également d'installer un **serveur SSH** pour configurer **plus facilement** votre VM sans devoir être obligatoirement dessus via le shell de base (c'est toujours plus agréable). Même principe qu'avant, vous pouvez ensuite **supprimer le service** selon vos besoins.
-
-Et pour reprendre ce qui a été dit avant, une fois votre installation de base effectuée pensez à **SAUVEGARDER**. Ça vous évitera d'attendre 30 minutes pour que votre OS se réinstalle en cas de problème.
-
-* * *
-
-### Diviser pour mieux régner
-
-C'est un principe que j'applique **tout le temps** lorsque je crée des box et c'est **très souvent utilisé en informatique** en général (et notamment en **programmation**).
-
-Pour vous donner une définition assez simple et pas du tout formelle, on pourrait dire qu'un **très gros problème est très compliqué à résoudre**. Parce qu'on ne sait pas forcément par où commencer, ce qu'il faut faire, il y a des liens logiques entre plusieurs parties de ce problème, etc ...
-
-La **solution** à adopter est donc de **diviser** ce gros et très difficile problème en **plusieurs petits problèmes** beaucoup plus **simples** à résoudre.
-
-On peut donner un exemple très simple et qui n'est pas en rapport avec l'informatique : construire une maison.
-C'est un problème d'envergure parce que dit comme ça, ça parait **long et fastidieux** (et c'est le cas). Mais maintenant disons qu'on va **découper cette tâche** en plein de tâches plus petites / courtes et plus faciles à résoudre. La première tâche serait de construire les fondations, puis de poser les mûrs, etc ... Jusqu'à arriver finalement au **problème de base** qui était de construire une maison.
-
-Ici c'est la même chose avec notre box. Le problème principal est : configurer une box. Mais c'est quand même très large. On va donc utiliser ce principe pour découper en **plus petits problèmes**.
-
-Disons qu'on veut mettre en place un site web sur notre machine vulnérable. On peut encore découper ce problème en tâches plus petites : installer apache, puis installer PHP, puis créer les pages web à intégrer, puis configurer apache, potentiellement les logs, etc ... A la fin on a une **liste de petites choses** à faire qui n'ont pas l'air très compliquées mais qui, misent bout à bout, vont nous permettre de **reconstituer notre problème principal** et de le **résoudre**.
-
-Maintenant que la grosse explication est passée, **concrètement** qu'est ce qu'il faut faire dans notre cas ?
-
-Ce que j'ai l'habitude de faire c'est de faire **parties par parties**. Elle ne sont pas forcément à faire dans l'ordre. Par exemple je peux commencer par configurer les droits sur la machine pour préparer l'élevation de privilèges. En même temps que je fais cette configuration je **prends des notes** pour savoir ce que j'ai fait et donc pour pouvoir le refaire de manière rapide et propre à la fin.
-
-Une fois que ça fonctionne je peux en faire une **sauvegarde** pour y avoir accès plus tard.
-
-Il est également important de **faire des tests** à chaque fois que vous avez configuré une petite partie. En effet, ce serait dommage d'appliquer la méthode de diviser pour régner pour qu'au final aucun test ne soit effectué et que le **tout ne fonctionne pas**.
-
+J'ai fait en sorte que la sauvegarde suivante contienne les services fonctionnels des précédentes.<br>
+C'est à dire que la sauvegarde qui s'appelle "My box - Web" contient le service Web fonctionnel mais aussi le SMB et le FTP.
 
 * * *
 
-### Configuration globale
+### Accès à la machine
 
-Cette partie permet de **réunir** toutes les petites parties qui ont été configurées pour n'en faire qu'un **gros bloc** dans une VM et qui correspondra à la machine finale. 
+Lors de l'installation nous avons installé un **serveur SSH** pour faciliter la configuration de notre machine vulnérable.<br>
+On va donc l'utiliser pour la suite de ce guide. Ça nous permet d'accéder à la box via notre machine principale et donc on va pouvoir utiliser certaines fonctionnalités qui ne sont pas disponibles si on y accède directement sur la machine. On peut citer le **copier/coller** ou bien la taille de l'écran qui nous permet d'être plus à l'aise. 
 
-Si lors de cette étape vous vous rendez compte qu'il y a un **conflit** au niveau des idées de base, par exemple que telle vulnérabilités ne correspond pas à l'idée de la box alors vous pouvez toujours **revenir sur vos pas** pour modifier votre configuration.
+Pour connaître l'adresse IP attribuée à la box il y a plusieurs possibilités.
 
-Une fois que vous avez configuré chaque portion de ce que vous vouliez faire *(et qu'elle fonctionne)* il suffit de **tout reprendre et de tout assembler**. Encore une fois ici plusieurs stratégies sont possibles. Il peut être judicieux de reprendre la machine de base pour y **insérer** chaque portion. Mais on peut aussi reprendre n'importe quelle sauvegarde et y insérer les autres parties unes à unes.
+On peut se rendre directement sur la machine pour récupérer cette adresse. Sur la page de login on rentre les infos renseignées lors de l'installation et de la création des utilisateurs.
+Il suffit ensuite de lancer la commande :
 
-C'est en fonction de vos **préférences** et au fur et à mesures que vous prendrez de **l'expérience** vous aurez vos propres habitudes.
+```bash
+ip -c a
+```
 
-A partir de cet instant n'oubliez pas de **modifier tous les mots de passe** des comptes et services sur votre machine que vous aviez configuré au préalable pour vous faciliter la tâche.
+Pour afficher toutes les interfaces de la machine. On va alors récupérer l'adresse qui doit être en 192.168.X.X
+
+L'autre possibilité est d'utiliser ``nmap`` ou ``netdiscover``. Avec cette méthode on ne va pas avoir besoin de se connecter à la machine au préalable pour récupérer l'adresse IP.
+
+Avec ``nmap`` il suffit de faire un ping scan :
+
+```bash
+nmap -sP 192.168.1.0/24
+``` 
+
+De votre côté peut-être qu'il faudra modifier l'adresse réseau. Ça dépend de votre plage d'adresse. Le plus souvent vous trouverez ``192.168.1.0/24`` ou ``192.168.0.0/24``.
+
+Vous devriez avoir comme résultat une liste d'adresses IP plus ou moins grande en fonction des appareils connectés sur votre réseau. Il faut alors définir celle qui correspond à notre box. Normalement elle devrait être identifiée par le `hostname` qui vous avez indiqué lors de la création de la machine dans l'installateur Debian.
+
+Pour ma part il s'agit de l'adresse ``192.168.1.44``.
+
+On va donc se connecter avec SSH à la machine :
+
+```bash
+ssh user@192.168.1.44
+```
+
+Evidemment remplacez ``user`` par votre nom d'utilisateur et l'IP par la votre. On vous demandera ensuite le mot de passe.
+
+Par défaut sudo n'est pas installé ici. Vous pouvez le faire de votre côté ou bien vous pouvez vous connecter au compte ``root`` avec :
+
+```bash
+su root #Puis entrez votre mot de passe quand demandé
+```
+
+* * *
+
+### FTP
+
+On commence la configuration de notre machine par la serveur FTP. L'ordre d'installation n'a pas d'importance.
+Il faut tout d'abord commencer par **mettre à jour** le système :
+
+```bash
+apt update
+```
+
+Pour l'installation et la configuration je me suis basé sur ce guide : [https://wiki.debian.org/fr/vsftpd](https://wiki.debian.org/fr/vsftpd).
+
+On installe le serveur FTP :
+
+```bash
+apt install vsftpd
+```
+
+On stop le service avant de modifier les fichiers :
+
+```bash
+service vsftpd stop
+```
+
+On peut désormais modifier la **configuration** du serveur FTP. Pour cela on va modifier le fichier ``/etc/vsftpd.conf``.
+
+On va modifier la ligne suivante avec la valeur correspondante :
+
+```
+anonymous_enable=YES
+```
+
+Cela va nous permettre d'autoriser l'**accès en anonyme** au serveur FTP (donc sans avoir besoin de mot de passe).
+
+On va créer un nouveau répertoire qui va contenir un fichier qui correspond à une voie sans issue :
+
+```bash
+mkdir /srv/ftp
+```
+
+```bash
+echo "Try harder :p" > /srv/ftp/.secret
+```
+
+On va y créer un fichier nommé ``.secret`` à l'intérieur qui contient la phrase *"Try harder :p"*. C'est donc une **fausse piste** et l'utilisateur va devoir trouver une autre façon de rentrer sur le système.
+
+Il faut redémarrer le service :
+
+```bash
+service vsftpd start
+```
+
+#### Tests
+
+Pour valider notre configuration on va tenter de se connecter en anonyme sur notre serveur FTP :
+
+```bash
+ftp 192.168.1.44
+```
+
+On va préciser comme utilisateur ``anonymous`` et on va rentrer un mot de passe vide.
+
+Si la connexion a bien été établie on devrait obtenir ceci :
+
+```
+Connected to 192.168.1.44.
+220 (vsFTPd 3.0.3)
+Name (192.168.1.44:krowz): anonymous
+331 Please specify the password.
+Password:
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp>
+```
+
+On peut ensuite vérifier qu'on possède bien le fichier ``.secret`` à l'intérieur et qu'on peut le récupérer :
+
+```
+ftp> ls -la
+200 PORT command successful. Consider using PASV.
+150 Here comes the directory listing.
+drwxr-xr-x    2 0        113          4096 Jan 13 09:39 .
+drwxr-xr-x    2 0        113          4096 Jan 13 09:39 ..
+-rw-r--r--    1 0        0              14 Jan 13 09:39 .secret
+226 Directory send OK.
+
+ftp> get .secret
+local: .secret remote: .secret
+200 PORT command successful. Consider using PASV.
+150 Opening BINARY mode data connection for .secret (14 bytes).
+226 Transfer complete.
+14 bytes received in 0.00 secs (184.7551 kB/s)
+ftp> exit
+```
+
+Si on tente d'afficher ce fichier téléchargé alors on retrouve notre fameuse phrase *"Try harder :p"*.
+
+Si vous avez réussi à faire ce que vous vouliez alors je vous conseille de faire une **sauvegarde**.<br>
+On peut alors passer à la partie suivante.
+
+* * *
+
+### SMB
+
+J'ai réalisé cette partie grâce à cette documentation : [https://wiki.debian.org/Samba/ServerSimple](https://wiki.debian.org/Samba/ServerSimple)
+
+Comme pour FTP on va installer le serveur Samba :
+
+```bash
+apt install samba
+```
+
+Le fichier de configuration de se serveur se situe ici : ``/etc/samba/smb.conf``.<br>
+On va aller le modifier pour y ajouter à la fin les lignes suivantes :
+
+```
+[Default]
+   comment = This is the default SMB share
+   read only = no
+   path = /var/www/html/writable
+   guest ok = yes
+```
+
+Cela va nous permettre de créer un nouveau share qui sera accessible par l'utilisateur. Il pourra écrire dedans et donc upload un reverse shell qu'il exploitera depuis le web.
+
+- **[Default]** est le nom du share.
+- **comment** est un commentaire qui décrit le share
+- **read_only = no** permet d'autoriser l'utilisateur à écrire sur le share
+- **path = /var/www/html/writable** va définir un chemin vers l'endroit où se situe notre répertoire partagé via SMB.
+- **guest ok = yes** permet de se connecter au share sans avoir besoin de connaître le mot de passe. De la même manière que le compte anonymous pour FTP.
+
+J'ai choisi le nom de répertoire ``writable`` pour qu'il soit dans une liste qu'on pourra utiliser pour du fuzzing web. 
+
+Ça ne sert à rien de vouloir mettre un répertoire ultra compliqué qui ne sera pas trouvable ou très compliqué à trouver.
+
+
+On met à jour les modifications qu'on vient d'effectuer :
+
+```bash
+/etc/init.d/smbd restart
+```
+
+#### Tests
+
+Sous Linux, pour lister la liste des dossiers partagés d'un serveur il suffit d'utiliser l'utilitaire ``smbclient`` :
+
+```bash
+smbclient -L 192.168.1.44
+```
+
+Dans notre cas on obtient le résultat suivant :
+
+```
+smbclient -L 192.168.1.44
+
+Enter WORKGROUP\root's password: 
+
+        Sharename       Type      Comment
+        ---------       ----      -------
+        print$          Disk      Printer Drivers
+        Default         Disk      This is the default SMB share
+        IPC$            IPC       IPC Service (Samba 4.9.5-Debian)
+SMB1 disabled -- no workgroup available
+```
+
+On peut voir que la commande nous demande un mot de passe root. Il suffit de ne rien renseigner et juste d'appuyer sur la touche *Entrée*.
+
+On se retrouve alors avec une liste des différents dossiers partagés. Celui qui nous intéresse est celui qui est nommé **Default**.
+
+Si on tente de s'y connecter :
+
+```bash
+smbclient //192.168.1.44/Default
+```
+
+Le mot de passe ``root`` va de nouveau être demandé mais comme auparavant on ne va rien mettre dans le champ.
+
+```
+Enter WORKGROUP\krowz's password: 
+Try "help" to get a list of possible commands.
+smb: \> ls
+  .                                   D        0  Wed Jan 13 17:28:17 2021
+  ..                                  D        0  Fri Jan  8 14:26:31 2021
+
+                7205476 blocks of size 1024. 5406012 blocks available
+smb: \>
+```
+
+On doit pouvoir accéder au dossier partagé et on obtient le résultat ci-dessus.
+
+Sur ma machine je suis dans un répertoire où il y a un fichier nommé ``test.txt``.
+
+Je vais tenter de l'upload sur la machine cible sia SMB :
+
+```
+Enter WORKGROUP\root's password: 
+Try "help" to get a list of possible commands.
+smb: \> put test.txt
+putting file test.txt as \test.txt (0,0 kb/s) (average 0,0 kb/s)
+smb: \> ls
+  .                                   D        0  Wed Jan 13 17:31:50 2021
+  ..                                  D        0  Fri Jan  8 14:26:31 2021
+  test.txt                            A        0  Wed Jan 13 17:31:50 2021
+
+                7205476 blocks of size 1024. 5406012 blocks available
+smb: \>
+```
+
+L'upload s'est bien effectué et on retrouve le fichier dans le dossier partagé.
+
+
+Encore une fois je vous conseille de **sauvegarder** votre box pour éviter de mauvaises surprises.
+
+* * *
+
+### Web
+
+Le serveur web est déjà présent puisqu'on l'a installé en même temps que SSH lors de la configuration de Debian tout au début.
+
+Le chemin par défaut est le suivant : ``/var/www/html``
+
+Tout ce qui se situe à la **racine** de ce dossier sera à la racine de votre site web.
+
+Par exemple si vous ajoutez un fichier ``bonjour.txt`` dans ``/var/www/html``, ce qui donne ``/var/www/html/bonjour.txt`` alors on pourra y accéder grâce au site via http://ip_du_site/bonjour.txt
+
+On peut ensuite ajouter d'autres fichiers ou dossiers. Pour les dossiers on va à chaque fois y accéder en ajouter un nouveau ``/`` dans l'URL.
+
+De notre côté il faut en créer un nouveau qui correspond au **dossier partagé samba**.
+
+```bash
+mkdir /var/www/html/writable
+```
+
+**Attention** ! Ne pas oublier de mettre le **droit write** sur le dossier où sera les fichiers dans SMB :
+
+```bash
+chmod o+w /var/www/html/writable
+```
+
+Si cette opération n'est pas effectuée alors on ne pourra pas upload de nouveau fichier dans ce dossier. On va donc donner le droit d'écriture à tous les autres groupes du répertoire. On rappelle que le répertoire appartient à l'utilisateur système ``www-data:www-data``.
+
+
+Il nous faut cependant encore installer **PHP**. Parce qu'on va vouloir que l'utilisateur puisse obtenir un shell sur la machine grâce à un reverse shell qui sera exécuté par php :
+
+```bash
+apt install php
+```
+
+Si on se rend sur le site actuel de notre machine ça va vous paraître bien triste puisque c'est la page par défaut. Si vous voulez lui donner un air de "vrai site" alors vous pouvez trouver sur Internet des **templates** gratuits.
+
+Dans notre cas j'ai décidé d'en utiliser un de ce site : [https://www.free-css.com/free-css-templates](https://www.free-css.com/free-css-templates).
+
+Une fois téléchargé il faut le transférer sur la box :
+
+```bash
+#Depuis notre machine principale :
+scp -r website_template krowz@192.168.1.44:/home/krowz
+```
+
+De retour sur notre box on va déplacer le fichier dans ``/var/www/html``. Je l'ai fait en plusieurs étapes à cause de certains droits qui m'empêchaient de directement l'upload dans le bon répertoire.
+
+```bash
+cd /home/krowz/website_template
+mv * /var/www/html
+```
+
+Cependant ça reste un site par défaut et donc si vous voulez lui donne plus de **crédibilité** alors vous devrez le modifier par vous même. 
+
+Par exemple modifier certains liens, le titre, les catégories ...
+
+
+#### Tests
+
+On peut se rendre sur le site web via le navigateur en [http://IP](http://IP) , IP étant évidemment l'adresse IP de la machine.
+
+On doit alors tomber sur notre magnifique site web avec notre beau CSS.
+
+![](../../../pictures/creation-box/website.png)
+
+Si on se rend à l'URL suivante on est censé avoir accès au répertoire et même à ``test.txt`` qu'on a upload juste avant via smb : [http://192.168.1.44/writable/](http://192.168.1.44/writable/)
+
+![](../../../pictures/creation-box/website_writeable_dir.png)
+<br><br>
+![](../../../pictures/creation-box/website_test_file.png)
+
+* * *
+
+### Privesc utilisateur
+
+L'utilisateur va obtenir un shell sur la machine grâce à un **reverse shell** qu'il aura upload via SMB et accédé via le web. Le service web est lancé par un utilisateur système qui s'appelle ``www-data``.<br> 
+De ce fait quand l'attaquant arrive sur la machine il est connecté en tant que ``www-data``.
+
+Il va donc falloir qu'il gagne les droits de l'utilisateur avec les droits plus élevés sur la machine.
+
+Ceci va se faire grâce à un binaire qui possède le bit **SUID**.
+
+On va avoir besoin de ``gcc`` pour pouvoir **compiler** notre code C et nous retrouver avec le fameux binaire.
+
+```bash
+apt install gcc
+```
+
+Notre petit programme en C va exécuter une commande comme si elle l'était directement dans le shell.
+
+Cette commande est ``date``. En théorie elle n'a rien de vulnérable. Et c'est le cas. Voici ce qu'on obtient en lançant simplement cette commande avec bash :
+
+```bash
+date
+jeu. 14 janv. 2021 13:08:58 CET
+```
+
+Comme vous vous en doutez cette commande nous renvoie juste la date du jour.
+
+La vulnérabilité du binaire ne se situe pas directement dans cette commande. On aurait pu même en appeler une autre comme ``id`` par exemple.
+
+En fait, on va appeler la commande **sans spécifier le chemin complet** vers le binaire correspondant : 
+
+```bash
+/bin/date
+```
+
+Puisqu'on l'appelle sans spécifier son chemin, on ne peut plus savoir si le binaire nommé ``date`` est vraiment celui qui est légitime ou bien s'il s'agit d'un autre qui a le même nom.
+
+On parlera après comment exploiter cette faille.
+
+Pour le moment voici le code C correspondant (on l'appellera *check_date.c*) :
+
+```c
+#include <stdio.h>
+#include <unistd.h>
+int main(){
+        setreuid(1000, 1000);
+        system("echo \"Today's date is : \" ; date");
+
+        return 0;
+}
+```
+
+Pour faire très rapide :
+
+- **setreuid** permet de définir les droits d'exécution du programme. Ici en tant que l'utilisateur en utilisant ses ID (qu'on peut retrouver dans ``/etc/passwd``). Je vous laisse faire vos recherches sur ``setreuid`` pour savoir précisément ce que cette fonction fait.
+- **system** va lancer la commande comme si elle l'était directement dans le shell.
+
+On va devoir ensuite le compiler avec ``gcc`` :
+
+```bash
+gcc check_date.c -o check_date
+
+```
+
+On se retrouve avec un binaire nommé *check_date* qu'on peut directement exécuter :
+
+```bash
+./check_date
+```
+```
+Today's date is :
+Thu Jan 14 07:17:20 EST 2021
+```
+
+Il ne faut pas oublier de lui rajouter le buit SUID :
+
+```bash
+chmod 4755 ./check_date
+```
+
+Ici c'est le *4* qui correspond au bit SUID. Ensuite on reprend la notation basique *755* pour avoir les droits ``rwxr-xr-x``.
+
+Je ne l'ai pas précisé avant mais il faut évidemment que le fichier appartienne à l'utilisateur sur lequel on veut se connecter :
+
+```bash
+chown krowz:krowz ./check_date
+```
+
+#### Comment exploiter cette faille ? 
+
+Comme je le disais avant, la vulnérabilité vient du fait qu'on va appeler la commande **sans spécifier le chemin complet**.
+
+Quand on lance une commande, le shell va d'abord regarder la **variable d'environnement** nommée ``PATH``.<br>
+On peut l'afficher simplement :
+
+```bash
+echo $PATH
+```
+```
+/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+```
+
+Il va ensuite chercher de gauche à droite dans chaque répertoire s'il trouve le binaire correspondant à la commande.
+
+C'est à dire qu'il va chercher :
+
+```
+/usr/local/bin/date
+/usr/bin/date
+/bin/date
+/usr/local/games/date
+/usr/games/date
+```
+
+Dès qu'il va tomber sur le binaire il ne va pas chercher plus loin et l'exécute.
+
+Dans notre cas il va trouver le binaire dans ``/usr/bin/date``.
+
+De plus, on peut **modifier directement** la variable ``PATH`` et donc ajouter de nouveaux répertoires dans lesquels on va chercher le binaire.
+
+Maintenant si on crée un binaire qu'on appelle ``date`` dans ``/tmp`` mais qui exécute une **autre commande** ?<br>
+Si ensuite on ajoute ``/tmp`` dans la variable ``PATH`` ?
+
+Et bien ce sera notre binaire ``date`` qui sera exécuté. Même si celui-ci n'affiche pas une date.
+
+Voici les commandes correspondantes :
+
+```bash
+echo /bin/id > /tmp/date
+chmod 777 /tmp/date
+```
+
+On va créer un nouveau fichier ``date`` qui contient la commande ``/bin/id`` et on lui donne tous les droits.
+
+On **exporte** ensuite notre nouveau chemin dans la variable d'environnement ``PATH`` :
+
+```bash
+export PATH=/tmp:$PATH
+```
+
+Si on affiche sa nouvelle valeur :
+
+```bash
+echo $PATH
+```
+```
+/tmp:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+```
+
+On voit bien que notre ``/tmp`` a été ajouté au tout début. Et donc on va d'abord aller check dans ce répertoire.
+
+Si on exécute de nouveau notre binaire :
+
+
+Là vous vous demandez peut-être comment l'utilisateur va pouvoir deviner que le binaire va lancer la commande ``date`` sans spécifier le chemin ?<br>
+Avec la commande ``strings`` on va pouvoir afficher les **chaînes de caractères lisibles** qui apparaissent dans le binaire :
+
+```bash
+strings ./check_date
+```
+```
+u/UH
+[]A\A]A^A_
+echo "Today's date is : " ; date
+;*3$"
+GCC: (Debian 8.3.0-6) 8.3.0
+crtstuff.c
+deregister_tm_clones
+```
+
+Entre toutes ces chaînes illisibles on voit bien apparaitre ce qui nous intéresse.
+
+Maintenant essayons d'exécuter de nouveau notre binaire :
+
+```bash
+./check_date
+```
+```
+Today's date is :
+uid=1000(krowz) gid=33(www-data) groups=33(www-data)
+```
+
+On voit bien que le binaire est exécuté en tant que l'utilisateur de la machine. 
+
+Notre vulnérabilité et son exploitation fonctionnent !
+
+Pour obtenir un shell rien de plus simple, dans ``/tmp`` il suffit de refaire la **même manipulation** mais de mettre ``/bin/bash`` dans ``/tmp/date`` plutôt que ``/bin/id``.
+
+```bash
+echo /bin/bash > /tmp/date
+chmod 777 /tmp/date
+```
+
+Une fois que tout fonctionne on peut supprimer notre fichier .c pour effacer les traces et ne pas que l'utilisateur ait accès au code source :
+
+```bash
+rm check_date.c
+```
+
+### Privesc root
+
+L'escalation de privilèges pour passer root est **plus simple** à configurer et à exploiter que celui précédent.
+
+On souhaite que l'utilisateur passe root grâce à la commande ``man``.
+
+Pour se faire on va devoir autoriser l'utilisateur de la machine à exécuter la commande ``man`` en tant que root sans avoir besoin de mot de passe :
+
+```bash
+nano /etc/sudoers
+```
+
+On va ajouter la ligne suivante :
+
+```
+krowz ALL=(root) NOPASSWD: /usr/bin/man man
+```
+
+Désormais l'utilisateur peut lancer la commande ``/usr/bin/man man`` avec sudo et le mot de passe ne sera pas demandé.
+
+
+#### Comment exploiter cette faille ? 
+
+Il faut que l'utilisateur réussisse à obtenir un shell root. Et il ne peut utiliser que la commande ``/usr/bin/man man``.
+
+Lorsqu'on fait un ``man`` d'une commande on ouvre dans le shell une **page de manuel** qui contient des informations sur le binaire spécifié par la commande.
+
+Ainsi ``man bash`` va nous donner le manuel d'utilisation pour ``bash``.
+
+Lorsqu'on est dans ce manuel on peut **exécuter des commandes**.
+
+Voici la marche à suivre :
+
+```bash
+sudo /usr/bin/man man
+```
+
+Une fois dans le manuel :
+
+```
+!/bin/bash
+```
+
+On entre et nous voilà **root** !
+
+* * *
+
+### Dernières modifications
+
+Il nous reste maintenant à modifier tous les mots de passe de la machine pour que l'utilisateur qui tente de hacker la machine ne puisse pas **brute force** et donc passer à côté du chemin défini.
+
+Pensez également à modifier les droits des fichiers. Par exemple, tout ce qui se situe dans ``/var/www/html`` doit appartenir à ``www-data`` :
+
+```bash
+chown -R www-data:www-data /var/www/
+```
+
+**Important** aussi ! Pensez à supprimer le fichier ``.bash_history`` situé dans tous les répertoires des utilisateurs. Ce fichier contient **toutes les commandes** tapées et donc ça peut donner de gros indices à l'utilisateur qui souhaite faire la box.
+
+Il est généré **automatiquement** donc je vous conseille de faire un lien symbolique qui redirige vers ``/dev/null``. Comme ça il sera toujours vide :
+
+```bash
+rm .bash_history
+ln -s /dev/null .bash_history
+```
+
+```bash
+ls -la
+```
+```
+lrwxrwxrwx 1 krowz krowz    9 Jan 14 09:09 .bash_history -> /dev/null
+```
+
+N'oubliez pas de le faire pour le compte *root* également.
+
+Pour finir on peut ajouter les **flags** dans les fichiers et mettre les bons propriétaires :
+
+```bash
+echo "01846f86f9285ca468eb3618db462ab1" > /home/krowz/user.txt
+chown krowz:krowz /home/krowz/user.txt
+chmod 600 /home/krowz/user.txt
+
+echo "b1970313271d6e36bb343cd8e671b087" > /root/root.txt
+chown root:root /root/root.txt
+```
+
+On met le droit de lecture uniquement sur l'utilisateur pour que quand on arrive en tant que ``www-data`` on ne puisse pas directement lire le flag. Il faut d'abord faire la première **élévation de privilèges** pour y avoir accès.
 
 * * *
 
 ### Essais globaux
 
-Il s'agit de nouveau d'une **étape importante** et je dirais même plus **primordiale** pour ne pas sortir une machine vulnérable **pleine de bugs** et impossible à utiliser.
+La configuration de chaque service et des escalations de privilèges est terminée. Normalement à cette étape chaque configuration fonctionne correctement.
 
-Normalement ici vous avez plein de petites parties fonctionnelles mais il se peut que toutes ces parties rassemblées ne fonctionnent plus *(et malheureusement c'est probable que ça arrive)*.
-Si tout fonctionne comme prévu c'est parfait et donc bravo à vous, vous avez réalisé votre première machine vulnérable ! Sinon il va falloir **revenir en arrière**.
+On va ici tenter de hack la machine de la **manière dont elle a été pensée** (ou pas pour trouver de potentielles vulnérabilités qui n'ont pas été pensées).
 
-Si jamais toutes vos parties fonctionnent de **manière séparées** mais qu'il y a un problème lorsque vous les regroupez, n'hésitez pas à le **faire par étapes**. Par exemple la partie 1 avec la partie 2, puis ajouter la partie 3. Si là ça ne fonctionne pas alors tenter d'ajouter la partie 2 avec la 3 et ainsi de suite pour définir d'où vient le problème.
-
-C'est souvent le cas au niveau des **droits**. Si un service configuré d'un côté doit aller chercher des fichiers générés par un autre service qui lui aussi à été configuré de son côté alors il se peut que le premier n'ai pas les droits de lecture dessus et donc ça va poser problème. Ce sont souvent ce genre de petits problèmes qui apparaissent lors de la configuration de la machine.
+Je ne vais pas le refaire ici parce que l'article est déjà suffisamment long mais je vous incite à le faire de votre côté !
 
 
 * * *
@@ -242,44 +923,28 @@ C'est souvent le cas au niveau des **droits**. Si un service configuré d'un cô
 
 Vous avez désormais une **machine vulnérable fonctionnelle** et prête à se faire hacker. Il ne vous reste plus qu'à la **partager** au monde entier.
 
-Pour se faire il faut d'abord **exporter** votre VM dans un format qui pourra se **partager facilement** sur Internet. Pour VirtualBox on utilise les **fichiers .ova**. Il s'agit d'un simple fichier qui pèse en général 2 voir 3 GB et qui permet à n'importe qui d'importer votre machine dans son propre VirtualBox pour ensuite tenter de l'attaquer.
+On va partir du principe que vous voulez la partager à vos amis.
 
-Vous pouvez la partager via **plein de moyens différents**, que ce soit via Google Drive, Mega.nz, Vulnhub, TryHackMe, etc ...
+Grâce à VirtualBox on va pouvoir exporter notre image sous le format **.ova**.
 
-En sachant qu'évidemment le moyen de diffusion va permettre à plus ou moins de personnes d'y accéder. Il est normal qu'un upload sur Google Drive **apportera moins de personnes** qui feront votre box (puisqu'il faut que vous partagiez le lien) contrairement à la mise en ligne sur TryHackMe qui compte plusieurs centaines de milliers d'utilisateurs.
+Pour se faire c'est très simple, on doit tout d'abord éteindre la VM de la machine vulnérable.
 
+On va ensuite faire un *clic droit* sur la machine dans la liste à gauche puis sélectionner *Export to OCI* :
 
-## Erreurs à ne pas faire
+![](../../../pictures/creation-box/export_menu.png)
 
-On va terminer cet article sur les **erreurs à ne pas faire** et qui risquent de **nuire à l'expérience** de celui qui tentera de faire votre box.
-Pour ces erreurs je me base évidemment sur les problèmes auxquels j'ai **déjà été confrontés** lors des différentes box que j'ai faites d'autres personnes qui en avait créé.
+Vous pouvez modifier le chemin vers lequel l'image sera exportée puis *Suivant* et enfin *Export*.
 
-La première chose est ce qu'on appelle le **guessing**. C'est le fait de devoir deviner quelque chose. Par exemple un mot de passe. Le but d'une box c'est soit d'avoir du **fun** en la faisant soit d'apprendre des choses et de **gagner en compétence**. Quand on arrive devant un mot de passe à deviner, qu'on a aucune idée de ce que ça peut être, qu'il n'y a aucun indice et qu'aucune wordlist ne peut cracker le mot de passe, eh bien ... ça fait pas avancer le schmilblic. Il y a plusieurs techniques et façons de faire pour **palier à ce problème**. Soit on donne un **indice** à l'utilisateur via un jeu de piste, soit on lui donne par exemple directement la wordlist, soit on le fait chercher ailleurs quelque chose qui lui permettrait de **contourner ce problème**.
-
-L'autre chose qui peut être mal utilisée est le **brute force**. Pourquoi je dis ça ? En soit le brute force est une **technique comme une autre** qui est plutôt réaliste quand on voit la complexité désastreuse des mots de passe des utilisateurs dans la vraie vie. Cependant lorsqu'on attaque une machine vulnérable le but c'est **pas d'attendre 5 jours** que le brute force en utilisant rockyou se termine.
-Donc oui le brute force peut faire partie d'un vecteur d'attaque dans une box mais il faut faire en sorte que l'utilisateur ne **perde pas trop de temps dessus**. Ensuire une fois pour contourner ce problème on peut par exemple mettre le mot de passe dans un texte puis faire utiliser l'outil ``CeWL`` pour générer une wordlist personnalisée, on peut également choisir un mot de passe dans une grosse wordlist mais qui n'est pas très éloignée. Par exemple prendre le 5000ième mot dans rockyou est largement suffisant pour faire comprendre à l'utilisateur comment se servir d'un outil de brute force *(pas la peine de mettre un mot placé à la ligne 9 412 014*).
-
-Ce qui peut être embêtant dans une machine ne sont les **problèmes de droits**. Ils ont été un peu évoqués précédemment et si vous avez suivi ce petit guide. Normalement avec les **différents tests effectués** tout au long de la configuration de votre box ça ne devrait pas arriver. J'ai déjà vu dans une box le ``.bash_history`` d'un utilisateur qui n'était pas vide et qui était accessible à tout le monde. Du coup on pouvait voir les commandes entrées par le créateur de la box et du coup ça cassait un peu l'expérience.
-
-Il se peut aussi que certains droits sur un fichier aient **été mal configurés** et du coup on peut effectuer des actions qui n'ont pas été pensées pour être faites et qui nous amène à **passer à côté du vrai chemin** qui a été pensé par le créateur.
-
-Evidemment rien ne nous empêche de quand même faire la machine comme elle a été pensée mais ça ne renvoie pas forcément une bonne image de la machine (même si l'erreur est humaine).
-
-D'où l'**importance de faire des tests** à chaque fois qu'on configure quelque chose sur la machine.
-
-
-La dernière chose qui me vient en tête est une **machine virtuelle trop lourde**. Lorsque vous installez et configurez vos services, essayez de ne pas perdre de la place inutilement. Une machine légère peut faire moins de 1GB alors que les plus grosses peuvent aller jusqu'à 4GB **grand max**. Une petite pensée à ceux qui ont de petites connexions.
-
-Pour **gagner de la place** vous pouvez par exemple dès l'installation de base configurer les partitions pour faire en sorte de ne prendre que l'espace nécessaire. Vous pouvez aussi **désinstaller** les outils vous vous avez utilisés sur la machine et qui ne sont pas indispensables à la résolution de celle-ci.
+Bravo à vous, vous pouvez désormais upload cette image sur une plateforme de partage comme [**Mega**](https://mega.nz/) par exemple.
 
 * * * 
 
 ## Conclusion
 
-Il y a encore des **tonnes de choses** à dire sur la création d'une box boot2root mais je pense que le principal a été dit ici pour que vous ayez une **base plutôt solide** pour la création de celle-ci.
+Un grand merci à tous ceux qui ont eu le courage de finir cet article.
 
-Vous pourrez retrouver très prochainement un **autre article** sur mon blog qui fera l'objet d'un **cas pratique de A à Z** pour la création et la mise en ligne d'une machine vulnérable.
+J'espère qu'il vous aura plu et que ça vous a donné des tonnes d'idées pour créer vos propres machines vulnérables.
 
-Comme d'habitude n'hésitez pas à me **donner vos retours** sur [**Twitter**](https://twitter.com/ZworKrowZ) ou en rejoignant mon [**serveur Discord**](https://discord.gg/v6rhJay).
+N'hésitez pas à me faire vos retours directement en me contactant sur [**Twitter**](https://twitter.com/ZworKrowZ) ou bien en rejoignant mon serveur [**Discord**](https://discord.gg/v6rhJay).
 
-J'espère que vous aurez appris des choses et je vous dis bonne création !
+**Bonne création et bon hacking !**

