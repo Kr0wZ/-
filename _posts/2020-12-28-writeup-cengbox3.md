@@ -2,7 +2,7 @@
 layout: default
 title: "Writeup CengBox: 3 - Vulnhub"
 date:   2020-12-28 10:00:00 +0200
-published: false
+published: true
 ---
 
 # Informations sur la box :
