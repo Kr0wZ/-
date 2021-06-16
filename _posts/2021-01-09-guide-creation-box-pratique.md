@@ -170,30 +170,30 @@ La première chose à faire est de télécharger une image **ISO** de Debian dir
 
 Il faut choisir en fonction de votre architecture processeur mais le plus souvent ce sera **amd64** pour du 64 bits ou **i386** pour du 32 bits.
 
-![](../../../pictures/creation-box/debian_download.PNG)
+![](../../../../pictures/creation-box/debian_download.PNG)
 
 Une fois en possession de cette image on va donc créer une **nouvelle machine** vierge sur VirtualBox.
 
-![](../../../pictures/creation-box/vbox_new.PNG)
+![](../../../../pictures/creation-box/vbox_new.PNG)
 
 Comme nous allons installer une machine Debian il faut choisir les bonnes options. Vous pouvez appeler votre box comme bon vous semble ça n'aura pas d'incidents par la suite. Le nom sera affiché dans la liste des machines à gauche une fois créée.
 
-![](../../../pictures/creation-box/vbox_config.PNG)
+![](../../../../pictures/creation-box/vbox_config.PNG)
 
 **Attention** lorsqu'on vous demande de choisir la taille du disque à sélectionner une **taille suffisante** pour ce dont vous avez à faire. En général 3-4 GB suffisent (très) largement.
 
 Il faut aussi spécifier avec quelle image la machine virtuelle doit démarrer. On a télécharger notre image Debian et donc il faut la spécifier.<br>
 On se rend dans le menu **"Stockage"**, on sélectionne le disque vide de la partie **Contrôleur : IDE** et à droite on va venir cliquer sur le petit CD et aller chercher notre **image disque** qu'on vient de télécharger (si vous ne l'avez pas déplacé alors il se situe dans le dossier de téléchargement). 
 
-![](../../../pictures/creation-box/vbox_iso_before.PNG)
+![](../../../../pictures/creation-box/vbox_iso_before.PNG)
 
 Suite à la sélection de l'image on doit obtenir quelque chose de semblable à ceci :
 
-![](../../../pictures/creation-box/vbox_iso_after.PNG)
+![](../../../../pictures/creation-box/vbox_iso_after.PNG)
 
 Par défaut la carte réseau est en **NAT**. On va la modifier pour la mettre en **mode pont**. De ce fait notre machine virtuelle aura une adresse IP assignée par notre DHCP comme si c'était une "vraie" machine physique du réseau.
 
-![](../../../pictures/creation-box/vbox_network.PNG)
+![](../../../../pictures/creation-box/vbox_network.PNG)
 
 On est prêt à lancer la machine virtuelle en la sélectionnant dans la liste de gauche et en cliquant sur la flèche verte **"Démarrer"**.
 
@@ -201,7 +201,7 @@ On se retrouve désormais à devoir installer Debian. Je vais montrer ici que le
 
 Pour ceux qui ne sont pas habitués avec la **ligne de commande** ça va être compliqué puisqu'on va faire presque que ça pour configurer les différents services de notre box. Cependant, si vous voulez profiter de votre dernier instant avec une souris vous pouvez faire une **installation graphique** ;)
 
-![](../../../pictures/creation-box/graphical_install.PNG)
+![](../../../../pictures/creation-box/graphical_install.PNG)
 
 On va donc vous demander plein d'informations différentes comme par exemple votre pays, la configuration de votre clavier, etc ... Je considère que vous êtes assez grands pour faire ce genre de choses.
 
@@ -216,11 +216,11 @@ Encore une fois ici on fait quelque chose de facile et simple volontairement mai
 
 Dans notre cas on va supprimer tout le disque pour y installer Debian.
 
-![](../../../pictures/creation-box/install_guided_partitionning.PNG)
+![](../../../../pictures/creation-box/install_guided_partitionning.PNG)
 
-![](../../../pictures/creation-box/install_guided_partitionning2.PNG)
+![](../../../../pictures/creation-box/install_guided_partitionning2.PNG)
 
-![](../../../pictures/creation-box/install_guided_partitionning3.PNG)
+![](../../../../pictures/creation-box/install_guided_partitionning3.PNG)
 
 L'installation va ensuite prendre de longues minutes.
 
@@ -232,7 +232,7 @@ Encore une fois il faut attendre que l'installation se fasse.
 
 On arrive à la partie où on va installer les services de base pour notre Debian.
 
-![](../../../pictures/creation-box/install_services.PNG)
+![](../../../../pictures/creation-box/install_services.PNG)
 
 On ne va **pas cocher** la case pour avoir un Desktop Environment. Parce que déjà ça va **alourdir** la machine pour rien et ensuite parce qu'il faut vous forcer à vous **habituer** à la ligne de commande (si ce n'est pas déjà le cas). Vous verrez c'est sympa. Promis.
 
@@ -245,9 +245,9 @@ On garde également les **"standard system utilities"**.
 
 On va ensuite installer **grub** pour que notre machine puisse boot.
 
-![](../../../pictures/creation-box/install_grub.PNG)
+![](../../../../pictures/creation-box/install_grub.PNG)
 
-![](../../../pictures/creation-box/install_grub2.PNG)
+![](../../../../pictures/creation-box/install_grub2.PNG)
 
 On l'installe au même emplacement que notre disque principal (de toute façon on n'a pas trop le choix).
 
@@ -255,11 +255,11 @@ On arrive à la fin de l'installation !
 
 Normalement le système devrait redémarrer et si tout s'est bien passé alors au redémarrage on doit tomber sur le **menu grub**
 
-![](../../../pictures/creation-box/boot_grub.PNG)
+![](../../../../pictures/creation-box/boot_grub.PNG)
 
 On atterit alors sur la page de **login** de la machine.
 
-![](../../../pictures/creation-box/login_page_after_install.PNG)
+![](../../../../pictures/creation-box/login_page_after_install.PNG)
 
 Si vous êtes arrivés jusqu'ici alors bravo à vous. Maintenant dépèchez vous de faire une **sauvegarde** de votre VM pour éviter de recommencer toutes ces étapes !
 
@@ -282,7 +282,7 @@ Ici aussi faîtes attention à bien **refaire une sauvegarde** de cette machine 
 
 Voici un petit exemple de la liste des machines qu'on aura à la fin de notre configuration :
 
-![](../../../pictures/creation-box/vbox_saves_all.PNG)
+![](../../../../pictures/creation-box/vbox_saves_all.PNG)
 
 J'ai fait en sorte que la sauvegarde suivante contienne les services fonctionnels des précédentes.<br>
 C'est à dire que la sauvegarde qui s'appelle "My box - Web" contient le service Web fonctionnel mais aussi le SMB et le FTP.
@@ -612,13 +612,13 @@ On peut se rendre sur le site web via le navigateur en [http://IP](http://IP) , 
 
 On doit alors tomber sur notre magnifique site web avec notre beau CSS.
 
-![](../../../pictures/creation-box/website.png)
+![](../../../../pictures/creation-box/website.png)
 
 Si on se rend à l'URL suivante on est censé avoir accès au répertoire et même à ``test.txt`` qu'on a upload juste avant via smb : [http://192.168.1.44/writable/](http://192.168.1.44/writable/)
 
-![](../../../pictures/creation-box/website_writeable_dir.png)
+![](../../../../pictures/creation-box/website_writeable_dir.png)
 <br><br>
-![](../../../pictures/creation-box/website_test_file.png)
+![](../../../../pictures/creation-box/website_test_file.png)
 
 * * *
 
@@ -933,7 +933,7 @@ Pour se faire c'est très simple, on doit tout d'abord éteindre la VM de la mac
 
 On va ensuite faire un *clic droit* sur la machine dans la liste à gauche puis sélectionner *Export to OCI* :
 
-![](../../../pictures/creation-box/export_menu.png)
+![](../../../../pictures/creation-box/export_menu.png)
 
 Vous pouvez modifier le chemin vers lequel l'image sera exportée puis *Suivant* et enfin *Export*.
 
