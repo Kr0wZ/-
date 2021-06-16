@@ -36,7 +36,7 @@ Pour avoir plus d'informations sur ces modes je vous invite à vous rendre sur l
 
 Dans la suite de cet article, pour parler de **John The Ripper** on parlera juste de **John**.
 
-![](../../../pictures/john-the-ripper/John-the-Ripper-logo.png)
+![](../../../../pictures/john-the-ripper/John-the-Ripper-logo.png)
 
 * * *
 

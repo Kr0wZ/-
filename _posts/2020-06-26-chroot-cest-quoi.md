@@ -120,7 +120,7 @@ Pour que notre chroot puisse fonctionner il faut au **minimum** un shell. Dans n
 
 Vous avez deviné ? Eh oui ... il faut refaire la même manipulation ...
 
-![](../../../pictures/chroot/san-andreas.gif)
+![](../../../../../pictures/chroot/san-andreas.gif)
 
 Il faut savoir que ce que je vous montre ici est vraiment le **strict minimum** pour faire fonctionner une jail chroot. Pour qu’elle soit plus fonctionnelle il faudrait rajouter les fichiers comme /dev/null, /dev/random, etc ...                                                         
 Attention tout de même il faut toujours garder en tête qu'il faut mettre dans la jail uniquement ce qui est utile pour son bon fonctionnement. On ne va pas mettre Metasploit dedans si on veut juste faire des ping.                                                 

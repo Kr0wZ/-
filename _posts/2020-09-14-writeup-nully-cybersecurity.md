@@ -335,7 +335,7 @@ Le réseau sur lequel nous sommes n'a plus du tout le même adressage que celui 
 
 Un ~~très beau~~ Paint vous expliquera mieux que moi.
 
-![](../../../pictures/writeups/nully-cybersecurity/paint_network.png)
+![](../../../../../pictures/writeups/nully-cybersecurity/paint_network.png)
 
 Docker permet de virtualiser différents environnements. Grâce à ça on peut faire tourner plusieurs dockers sur une machine hôte. Dans notre cas c'est ce qu'il se passe. Chaque docker se situe dans un même sous réseau sur la machine hôte qui elle est sur le réseau 192.168.1.0/24.
 

@@ -66,7 +66,7 @@ On s'attardera à la fin sur la strict comparison pour la sécurisation de nos c
 
 Ici on peut voir le tableau des comparaisons avec la loose comparison (``==``) :
 
-![](../../../pictures/php-type-juggling/loose-comparison.png)
+![](../../../../../pictures/php-type-juggling/loose-comparison.png)
 
 Ce qui nous saute tout de suite aux yeux ce sont des conparaisons étranges qui renvoient **VRAI** alors qu'elles ne devraient pas.
 Notamment comparer ``0`` avec une chaîne de caractère qui va nous renvoyer **TRUE**.                                                         
@@ -188,7 +188,7 @@ Ici on évite donc à PHP de faire des conversions douteuses tout seul de son c�
 
 Voici le tableau correspondant :
 
-![](../../../pictures/php-type-juggling/strict-comparison.png)
+![](../../../../../pictures/php-type-juggling/strict-comparison.png)
 
 De ce fait le loose comparison de la partie précédente que renvoyait **TRUE** avec ``"0e11111111" == 0`` renvoie maintenant ``FALSE`` car leurs types sont différents (string et int).
 
