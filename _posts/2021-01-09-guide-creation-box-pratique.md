@@ -7,7 +7,7 @@ categories:
   - Guide
 ---
 
-*Cet article est la partie pratique pour la création d'une box boot2root. Vous pouvez retrouver la première partie théorique [**ici**](https://kr0wz.github.io/fr/2021/01/05/guide-creation-box.html)*
+*Cet article est la partie pratique pour la création d'une box boot2root. Vous pouvez retrouver la première partie théorique [**ici**](https://kr0wz.github.io/fr/guide/2021/01/05/guide-creation-box.html)*
 
 # Introduction :
 
