@@ -3,6 +3,8 @@ layout: default
 title: "Chroot c'est quoi ?"
 date:   2020-06-26 11:45:30 +0200
 published: true
+categories:
+  - Linux
 ---
 
 ### Ce que nous allons voir dans cet article :

@@ -3,6 +3,8 @@ layout: default
 title: "Création de box - Guide du débutant - Pratique"
 date:   2021-01-19 03:00:00 +0200
 published: true
+categories:
+  - Guide
 ---
 
 *Cet article est la partie pratique pour la création d'une box boot2root. Vous pouvez retrouver la première partie théorique [**ici**](https://kr0wz.github.io/fr/2021/01/05/guide-creation-box.html)*

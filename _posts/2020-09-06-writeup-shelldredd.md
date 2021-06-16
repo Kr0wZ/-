@@ -3,6 +3,8 @@ layout: default
 title: "Writeup OnSystem: ShellDredd #1 Hannah - Vulnhub"
 date:   2020-09-05 03:00:00 +0200
 published: true
+categories:
+  - Writeup
 ---
 
 # Informations sur la box :

@@ -3,6 +3,8 @@ layout: default
 title: "PHP - Type Juggling"
 date:   2020-07-09 10:00:00 +0200
 published: true
+categories:
+  - Web
 ---
 
 ### Ce que nous allons voir dans cet article :

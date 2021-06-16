@@ -3,6 +3,8 @@ layout: default
 title: "Writeup Funbox: 1 - Vulnhub"
 date:   2020-08-08 03:00:00 +0200
 published: true
+categories:
+  - Writeup
 ---
 
 # Informations sur la box :

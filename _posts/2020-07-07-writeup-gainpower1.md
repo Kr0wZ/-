@@ -3,6 +3,8 @@ layout: default
 title: "Writeup GainPower: 1 - Vulnhub"
 date:   2020-07-07 10:00:00 +0200
 published: true
+categories:
+  - Writeup
 ---
 
 # Informations sur la box :

@@ -3,6 +3,8 @@ layout: default
 title: "Writeup The Planets: Mercury - Vulnhub"
 date:   2020-09-05 03:00:00 +0200
 published: true
+categories:
+  - Writeup
 ---
 
 # Informations sur la box :

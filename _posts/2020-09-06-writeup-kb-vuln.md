@@ -3,6 +3,8 @@ layout: default
 title: "Writeup KB-VULN: 1 - Vulnhub"
 date:   2020-09-05 07:00:00 +0200
 published: true
+categories:
+  - Writeup
 ---
 
 # Informations sur la box :

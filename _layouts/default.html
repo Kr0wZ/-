@@ -27,6 +27,7 @@
         <a href="{{ site.baseurl }}" class="btn">Accueil</a>
         <a href="{{ site.url }}{{ site.baseurl }}/{{ site.about_page }}" class="btn">Whoami</a>
         <a href="{{ site.github_link }}" class="btn">Github</a>
+
       {% endif %}
       {% if site.show_downloads %}
         <a href="{{ site.github.zip_url }}" class="btn">Download .zip</a>
@@ -35,7 +36,15 @@
     </header>
 
     <main id="content" class="main-content" role="main">
+      {% if page.categories %}
+        <h4>Catégorie : </h4>
+        {% for category in page.categories %}
+          {{ category }}
+        {% endfor %}
+      {% endif %}
+  
       {{ content }}
+      
 
     </main>
   </body>

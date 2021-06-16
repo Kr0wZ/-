@@ -27,6 +27,8 @@ url: "https://kr0wz.github.io" # the base hostname & protocol for your site, e.g
 twitter_username: ZworKrowZ
 github_username:  Kr0wZ
 
+category_page: "category.html"
+
 about_page: "about.html"
 
 github_link: "https://github.com/Kr0wZ/"
@@ -55,3 +57,19 @@ plugins:
 #   - vendor/cache/
 #   - vendor/gems/
 #   - vendor/ruby/
+
+# Liste des catégories
+collections:
+  category:
+    output: true # générer la page HTML
+    permalink: /:collection/:name/index.html
+    # exemple -> /category/informatique/index.html
+
+defaults:
+  - scope:
+      path: ""
+      type: category
+    values:
+      layout: "default"
+      # layout utilisé -> _layouts/default.html
+

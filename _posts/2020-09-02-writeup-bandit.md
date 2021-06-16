@@ -3,6 +3,8 @@ layout: default
 title: "Writeup Bandit - OverTheWire"
 date:   2020-08-08 03:00:00 +0200
 published: false
+categories:
+  - Writeup
 ---
 
 Pour ces solutions le mot de passe n'est pas donné, cependant la marche à suivre pour l'obtenir est expliquée.
